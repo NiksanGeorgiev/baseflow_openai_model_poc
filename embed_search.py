@@ -6,12 +6,17 @@ from scipy import spatial
 from typing import List
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+import requests
+from dotenv import load_dotenv
 
-# Set your OpenAI API key from environment
-openai.api_key = os.environ.get(
-    "OPENAI_API_KEY",
-    "<key>",
-)
+# Load environment variables from .env file
+load_dotenv()
+
+# Access the variables
+openai.api_key = os.getenv("OPENAI_API_KEY")
+whatsapp_access_token = os.getenv("WHATSAPP_ACCESS_TOKEN")
+whatsapp_app_token = os.getenv("WHATSAPP_APP_TOKEN")
+
 
 # Define the models we'll use:
 GPT_MODELS = ["gpt-4o", "gpt-4o-mini"]  # Choose one for answering
@@ -207,6 +212,70 @@ def handle_question():
 
     return jsonify({"question": user_query, "answer": answer})
 
+@app.route("/webhook", methods=["GET"])
+def handle_webhook():
+    mode = request.args.get("hub.mode")
+    challange = request.args.get("hub.challenge")
+    token = request.args.get("hub.verify_token")
+
+    if mode and token:
+        if mode == "subscribe" and token == whatsapp_app_token:
+            print("Webhook verified")
+            return jsonify({"hub.challenge": challange}), 200
+        else:
+            return jsonify({"error": "Invalid token"}), 403
+        
+@app.route("/webhook", methods=["POST"])
+def handle_webhook_post():
+    body = request.get_json()
+
+    url = "https://graph.facebook.com/v22.0/643587328828365/messages"
+
+    if body.get("object"):
+            entry = body.get("entry", [])
+            if (
+                entry
+                and entry[0].get("changes")
+                and entry[0]["changes"][0].get("value", {}).get("messages")
+                and entry[0]["changes"][0]["value"]["messages"][0]
+            ):
+                phon_no_id = entry[0]["changes"][0]["value"]["metadata"]["phone_number_id"]
+                from_number = entry[0]["changes"][0]["value"]["messages"][0]["from"]
+                msg_body = entry[0]["changes"][0]["value"]["messages"][0]["text"]["body"]
+
+                print(f"phone number {phon_no_id}")
+                print(f"from {from_number}")
+                print(f"body param {msg_body}")
+
+                answer = ask(
+                    msg_body,
+                    df,
+                    model=GPT_MODELS[1],
+                    token_budget=4096 - 500,
+                    print_message=False,
+                )
+
+                url = f"https://graph.facebook.com/v22.0/{phon_no_id}/messages"
+                payload = {
+                    "messaging_product": "whatsapp",
+                    "to": from_number,
+                    "text": {
+                        "body": f"{answer}"
+                    },
+                }
+                headers = {
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {whatsapp_access_token}",
+                }
+
+                response = requests.post(url, json=payload, headers=headers)
+                print(response.text)
+
+                return jsonify({"status": "success"}), 200
+    else:
+        return jsonify({"error": "Invalid body param"}), 404     
+            
 
 if __name__ == "__main__":
-    app.run(host="localhost", port=8080)
+    app.run(port=8080)
+
