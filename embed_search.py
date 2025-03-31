@@ -215,7 +215,7 @@ def handle_question():
 @app.route("/webhook", methods=["GET"])
 def handle_webhook():
     mode = request.args.get("hub.mode")
-    challange = request.args.get("hub.challenge")
+    challange = request.args.get("hub.challenge").strip().strip('"')
     token = request.args.get("hub.verify_token")
 
     if mode and token:
