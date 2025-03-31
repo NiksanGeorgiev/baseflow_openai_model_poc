@@ -334,6 +334,9 @@ def handle_webhook_post():
                             for chunk in audio_response.iter_content(chunk_size=1024):
                                 audio_file.write(chunk)
                         print(f"Audio file {audio_id}.ogg downloaded successfully.")
+                        if os.path.getsize(f"{audio_id}.ogg") == 0:
+                            print("Downloaded file is empty. Check the source.")
+                            return jsonify({"error": "Downloaded file is empty"}), 400
                     else:
                         print(f"Failed to download audio file: {audio_response.text}")
                 except Exception as e:
@@ -343,12 +346,11 @@ def handle_webhook_post():
                 transcribed = ""
                 try:
                     # Convert OGG to WAV
-                    audio = AudioSegment.from_ogg(f"{audio_id}.ogg")
+                    audio = AudioSegment.from_file(f"{audio_id}.ogg", format="ogg")
                     audio.export(f"{audio_id}.wav", format="wav")
-
-                    transcribed = transcribe_audio(f"{audio_id}.wav")
                 except Exception as e:
                     print(f"Failed transcribing or converting file: {e}")
+                transcribed = transcribe_audio(f"{audio_id}.wav")
                 
                 answer = ask(
                     transcribed,
