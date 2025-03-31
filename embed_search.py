@@ -337,7 +337,7 @@ def handle_webhook_post():
                     audio_response = requests.get(media_url, headers=headers, stream=True)
                     print("Audio response:", audio_response)
 
-                    if audio_response.status_code == 200:
+                    if audio_response.status_code != None:
                         with open(f"{audio_id}.ogg", "wb") as audio_file:
                             for chunk in audio_response.iter_content(chunk_size=1024):
                                 audio_file.write(chunk)
