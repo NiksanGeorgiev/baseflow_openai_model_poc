@@ -325,26 +325,31 @@ def handle_webhook_post():
                 print(f"audio SHA256 {sha256}")
 
                 # Download the audio file
-                url = f"https://graph.facebook.com/v22.0/{audio_id}"
-                headers = {
-                    "Authorization": f"Bearer {whatsapp_access_token}",
-                }
-                audio_response = requests.get(url, headers=headers, stream=True)
+                try:
+                    url = f"https://graph.facebook.com/v22.0/{audio_id}"
+                    headers = {
+                        "Authorization": f"Bearer {whatsapp_access_token}",
+                    }
+                    audio_response = requests.get(url, headers=headers, stream=True)
 
-                if audio_response.status_code == 200:
-                    with open(f"{audio_id}.ogg", "wb") as audio_file:
-                        for chunk in audio_response.iter_content(chunk_size=1024):
-                            audio_file.write(chunk)
-                    print(f"Audio file {audio_id}.ogg downloaded successfully.")
-                else:
-                    print(f"Failed to download audio file: {audio_response.text}")
+                    if audio_response.status_code == 200:
+                        with open(f"{audio_id}.ogg", "wb") as audio_file:
+                            for chunk in audio_response.iter_content(chunk_size=1024):
+                                audio_file.write(chunk)
+                        print(f"Audio file {audio_id}.ogg downloaded successfully.")
+                    else:
+                        print(f"Failed to download audio file: {audio_response.text}")
+                except Exception as e:
+                    print(f"Failed downloading file: {e}")
+                
+                try:
+                    # Convert OGG to WAV
+                    audio = AudioSegment.from_ogg(f"{audio_id}.ogg")
+                    audio.export(f"{audio_id}.wav", format="wav")
 
-                # Convert OGG to WAV
-                audio = AudioSegment.from_ogg(f"{audio_id}.ogg")
-                audio.export(f"{audio_id}.wav", format="wav")
-
-                transcribed = transcribe_audio(f"{audio_id}.wav")
-
+                    transcribed = transcribe_audio(f"{audio_id}.wav")
+                except Exception as e:
+                    print(f"Failed transcribing or converting file: {e}")
                 
                 answer = ask(
                     transcribed,
