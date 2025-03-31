@@ -267,9 +267,6 @@ def handle_webhook():
 def handle_webhook_post():
     body = request.get_json()
 
-    print("Received webhook body:")
-    print(repr(body))  # Use repr to see all symbols in the body
-
     if body.get("object"):
         entry = body.get("entry", [])
         if (
@@ -342,6 +339,8 @@ def handle_webhook_post():
                 except Exception as e:
                     print(f"Failed downloading file: {e}")
                 
+
+                transcribed = ""
                 try:
                     # Convert OGG to WAV
                     audio = AudioSegment.from_ogg(f"{audio_id}.ogg")
