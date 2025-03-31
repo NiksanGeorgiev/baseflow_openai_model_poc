@@ -327,14 +327,15 @@ def handle_webhook_post():
                     headers = {
                         "Authorization": f"Bearer {whatsapp_access_token}",
                     }
-                    audio_response = requests.get(url, headers=headers, stream=True)
+                    audio_info = requests.get(url, headers=headers, stream=True)
 
-                    media_url = audio_response.url
-                    print("Media URL:", media_url)
+                    media_id = audio_info.url
+                    print("Media URL:", media_id)
 
-                    url = f"https://graph.facebook.com/v22.0/{media_url}"
+                    media_url = requests.get(media_id, headers=headers, stream=True).url
 
-                    audio_response = requests.get(url, headers=headers, stream=True)
+                    audio_response = requests.get(media_url, headers=headers, stream=True)
+                    print("Audio response:", audio_response)
 
                     if audio_response.status_code == 200:
                         with open(f"{audio_id}.ogg", "wb") as audio_file:
