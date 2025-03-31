@@ -332,18 +332,15 @@ def handle_webhook_post():
                     media_id = audio_info.url
                     print("Media URL:", media_id)
 
-                    media_url = requests.get(media_id, headers=headers, stream=True)
+                    media_url = requests.get(media_id, headers=headers, stream=True).content.url
                     print("Media URL:", media_url)
-                    print("Media URL:", media_url.get("url"))
-                    media_url = media_url.get("url")
-                    print("Media URL:", media_url)
-                    print("Media URL:", media_url.get("url"))
-                    audio_response = requests.get(media_url, headers=headers, stream=True)
-                    print("Audio response content:", audio_response.content)
+                    audio_response = requests.get(media_url, headers=headers, stream=True).content
+                    print("Audio response content:", audio_response)
+                    print("type:", type(audio_response))
 
-                    if audio_response.status_code == 200:
+                    if audio_response != None:
                         with open(f"{audio_id}.ogg", "wb") as audio_file:
-                            for chunk in audio_response.content.iter_content(chunk_size=1024):
+                            for chunk in audio_response.iter_content(chunk_size=1024):
                                 audio_file.write(chunk)
                         print(f"Audio file {audio_id}.ogg downloaded successfully.")
                         with open(f"{audio_id}.ogg", "rb") as f:
