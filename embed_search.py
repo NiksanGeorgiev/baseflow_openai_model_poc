@@ -229,8 +229,6 @@ def handle_webhook():
 def handle_webhook_post():
     body = request.get_json()
 
-    url = "https://graph.facebook.com/v22.0/643587328828365/messages"
-
     if body.get("object"):
             entry = body.get("entry", [])
             if (
