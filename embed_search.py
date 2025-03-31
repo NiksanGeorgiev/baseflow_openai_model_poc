@@ -332,12 +332,15 @@ def handle_webhook_post():
                 media_id = audio_info.url
                 print("Media URL:", media_id)
 
-                media_url = requests.get(media_id, headers=headers)
-                print("Media URL:", media_url.content)
+                media_url = requests.get(media_id, headers=headers).content.decode("utf-8")
+                print("Entire Decoded Content:", media_url)
+                print("Decoded Url:", media_url.url)
                 print("https://lookaside.fbsbx.com/whatsapp_business/attachments/?mid=...")
-                    # audio_response = requests.get(media_url, headers=headers).content
-                    # print("Audio response content:", audio_response)
-                    # print("type:", type(audio_response))
+
+
+                audio_response = requests.get(media_url.url, headers=headers).content.decode("utf-8")
+                print("Audio response content:", audio_response)
+                print("type:", type(audio_response))
 
                 #     if audio_response != None:
                 #         with open(f"{audio_id}.ogg", "wb") as audio_file:
