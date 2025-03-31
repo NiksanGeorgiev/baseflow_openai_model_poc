@@ -221,7 +221,7 @@ def handle_webhook():
     if mode and token:
         if mode == "subscribe" and token == whatsapp_app_token:
             print("Webhook verified")
-            return jsonify({challange}), 200
+            return jsonify(challange), 200
         else:
             return jsonify({"error": "Invalid token"}), 403
         
