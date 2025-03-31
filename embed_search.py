@@ -9,6 +9,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import requests
 from dotenv import load_dotenv
+from pydub import AudioSegment
 
 # Load environment variables from .env file
 load_dotenv()
@@ -145,16 +146,13 @@ def query_message(query: str, df: pd.DataFrame, model: str, token_budget: int) -
     return message + question
 
 
-def ask_audio(
+def transcribe_audio(
         audio: str,
         model: str = GPT_MODELS[1]
     )-> str:
 
-        # Fetch the audio file and convert it to a base64 encoded string
-
     with open(audio, "rb") as ogg_file:
         ogg_bytes = ogg_file.read()
-    print(ogg_bytes)
     encoded_string = base64.b64encode(ogg_bytes).decode('utf-8')
 
     completion = openai.chat.completions.create(
@@ -181,7 +179,7 @@ def ask_audio(
         ]
     )
 
-    print(completion.choices[0].message)
+    return completion.choices[0].message.audio.transcript
 
 
 def ask(
@@ -341,23 +339,33 @@ def handle_webhook_post():
                 else:
                     print(f"Failed to download audio file: {audio_response.text}")
 
-                # Respond to the user
+                # Convert OGG to WAV
+                audio = AudioSegment.from_ogg(f"{audio_id}.ogg")
+                audio.export(f"{audio_id}.wav", format="wav")
+
+                transcribed = transcribe_audio(f"{audio_id}.wav")
+
+                
+                answer = ask(
+                    transcribed,
+                    df,
+                    model=GPT_MODELS[1],
+                    token_budget=4096 - 500,
+                    print_message=False,
+                )
+
                 url = f"https://graph.facebook.com/v22.0/{phon_no_id}/messages"
                 payload = {
                     "messaging_product": "whatsapp",
                     "to": from_number,
                     "text": {
-                        "body": "We received your audio message. Thank you!"
+                        "body": f"{answer}"
                     },
                 }
                 headers = {
                     "Content-Type": "application/json",
                     "Authorization": f"Bearer {whatsapp_access_token}",
                 }
-
-                response = requests.post(url, json=payload, headers=headers)
-                print(response.text)
-
             return jsonify({"status": "success"}), 200
         else:
             return jsonify({"error": "Invalid body param"}), 404
@@ -365,5 +373,4 @@ def handle_webhook_post():
         return jsonify({"error": "Invalid body param"}), 404            
 
 if __name__ == "__main__":
-    ask_audio('alloy.wav')
-    #app.run(host="0.0.0.0", port=8080)
+    app.run(host="0.0.0.0", port=8080)
