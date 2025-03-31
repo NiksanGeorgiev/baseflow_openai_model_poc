@@ -329,9 +329,17 @@ def handle_webhook_post():
                     }
                     audio_response = requests.get(url, headers=headers, stream=True)
 
+                    media_url = audio_response.url
+                    print("Media URL:", media_url)
+
+                    url = f"https://graph.facebook.com/v22.0/{media_url}"
+
+                    audio_response = requests.get(url, headers=headers, stream=True)
+
                     if audio_response.status_code == 200:
                         with open(f"{audio_id}.ogg", "wb") as audio_file:
-                            audio_file.write(audio_response.content)
+                            for chunk in audio_response.iter_content(chunk_size=1024):
+                                audio_file.write(chunk)
                         print(f"Audio file {audio_id}.ogg downloaded successfully.")
                         with open(f"{audio_id}.ogg", "rb") as f:
                             header = f.read(4)
