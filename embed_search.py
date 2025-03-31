@@ -347,9 +347,18 @@ def handle_webhook_post():
                 try:
                     # Convert OGG to WAV
                     audio = AudioSegment.from_file(f"{audio_id}.ogg", format="ogg")
+                except Exception as e:
+                    print(f"Failed converting file: {e}")
+                    return jsonify({"error": "Failed converting file"}), 400
+                try:
+                    # Convert OGG to WAV
                     audio.export(f"{audio_id}.wav", format="wav")
                 except Exception as e:
-                    print(f"Failed transcribing or converting file: {e}")
+                    print(f"Failed converting file: {e}")
+                    return jsonify({"error": "Failed exporting file"}), 400
+                
+                    
+
                 transcribed = transcribe_audio(f"{audio_id}.wav")
                 
                 answer = ask(
