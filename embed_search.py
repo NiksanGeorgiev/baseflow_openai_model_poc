@@ -322,77 +322,78 @@ def handle_webhook_post():
                 print(f"audio SHA256 {sha256}")
 
                 # Download the audio file
-                try:
-                    url = f"https://graph.facebook.com/v22.0/{audio_id}"
-                    headers = {
-                        "Authorization": f"Bearer {whatsapp_access_token}",
-                    }
-                    audio_info = requests.get(url, headers=headers, stream=True)
+                
+                url = f"https://graph.facebook.com/v22.0/{audio_id}"
+                headers = {
+                    "Authorization": f"Bearer {whatsapp_access_token}",
+                }
+                audio_info = requests.get(url, headers=headers)
 
-                    media_id = audio_info.url
-                    print("Media URL:", media_id)
+                media_id = audio_info.url
+                print("Media URL:", media_id)
 
-                    media_url = requests.get(media_id, headers=headers, stream=True).content.url
-                    print("Media URL:", media_url)
-                    audio_response = requests.get(media_url, headers=headers, stream=True).content
-                    print("Audio response content:", audio_response)
-                    print("type:", type(audio_response))
+                media_url = requests.get(media_id, headers=headers)
+                print("Media URL:", media_url.content)
+                print("https://lookaside.fbsbx.com/whatsapp_business/attachments/?mid=...")
+                    # audio_response = requests.get(media_url, headers=headers).content
+                    # print("Audio response content:", audio_response)
+                    # print("type:", type(audio_response))
 
-                    if audio_response != None:
-                        with open(f"{audio_id}.ogg", "wb") as audio_file:
-                            for chunk in audio_response.iter_content(chunk_size=1024):
-                                audio_file.write(chunk)
-                        print(f"Audio file {audio_id}.ogg downloaded successfully.")
-                        with open(f"{audio_id}.ogg", "rb") as f:
-                            header = f.read(4)
-                            print("File header:", header)
-                        if os.path.getsize(f"{audio_id}.ogg") == 0:
-                            print("Downloaded file is empty. Check the source.")
-                            return jsonify({"error": "Downloaded file is empty"}), 400
-                    else:
-                        print(f"Failed to download audio file: {audio_response.text}")
-                except Exception as e:
-                    print(f"Failed downloading file: {e}")
+                #     if audio_response != None:
+                #         with open(f"{audio_id}.ogg", "wb") as audio_file:
+                #             for chunk in audio_response.iter_content(chunk_size=1024):
+                #                 audio_file.write(chunk)
+                #         print(f"Audio file {audio_id}.ogg downloaded successfully.")
+                #         with open(f"{audio_id}.ogg", "rb") as f:
+                #             header = f.read(4)
+                #             print("File header:", header)
+                #         if os.path.getsize(f"{audio_id}.ogg") == 0:
+                #             print("Downloaded file is empty. Check the source.")
+                #             return jsonify({"error": "Downloaded file is empty"}), 400
+                #     else:
+                #         print(f"Failed to download audio file: {audio_response.text}")
+                # except Exception as e:
+                #     print(f"Failed downloading file: {e}")
                 
 
-                transcribed = ""
-                try:
-                    # Convert OGG to WAV
-                    audio = AudioSegment.from_file(f"{audio_id}.ogg", format="ogg")
-                except Exception as e:
-                    print(f"Failed converting file: {e}")
-                    return jsonify({"error": "Failed converting file"}), 400
-                try:
-                    # Convert OGG to WAV
-                    audio.export(f"{audio_id}.wav", format="wav")
-                except Exception as e:
-                    print(f"Failed expporting file: {e}")
-                    return jsonify({"error": "Failed exporting file"}), 400
+                # transcribed = ""
+                # try:
+                #     # Convert OGG to WAV
+                #     audio = AudioSegment.from_file(f"{audio_id}.ogg", format="ogg")
+                # except Exception as e:
+                #     print(f"Failed converting file: {e}")
+                #     return jsonify({"error": "Failed converting file"}), 400
+                # try:
+                #     # Convert OGG to WAV
+                #     audio.export(f"{audio_id}.wav", format="wav")
+                # except Exception as e:
+                #     print(f"Failed expporting file: {e}")
+                #     return jsonify({"error": "Failed exporting file"}), 400
                 
                     
 
-                transcribed = transcribe_audio(f"{audio_id}.wav")
+                # transcribed = transcribe_audio(f"{audio_id}.wav")
                 
-                answer = ask(
-                    transcribed,
-                    df,
-                    model=GPT_MODELS[1],
-                    token_budget=4096 - 500,
-                    print_message=False,
-                )
+                # answer = ask(
+                #     transcribed,
+                #     df,
+                #     model=GPT_MODELS[1],
+                #     token_budget=4096 - 500,
+                #     print_message=False,
+                # )
 
-                url = f"https://graph.facebook.com/v22.0/{phon_no_id}/messages"
-                payload = {
-                    "messaging_product": "whatsapp",
-                    "to": from_number,
-                    "text": {
-                        "body": f"{answer}"
-                    },
-                }
-                headers = {
-                    "Content-Type": "application/json",
-                    "Authorization": f"Bearer {whatsapp_access_token}",
-                }
+                # url = f"https://graph.facebook.com/v22.0/{phon_no_id}/messages"
+                # payload = {
+                #     "messaging_product": "whatsapp",
+                #     "to": from_number,
+                #     "text": {
+                #         "body": f"{answer}"
+                #     },
+                # }
+                # headers = {
+                #     "Content-Type": "application/json",
+                #     "Authorization": f"Bearer {whatsapp_access_token}",
+                # }
             return jsonify({"status": "success"}), 200
         else:
             return jsonify({"error": "Invalid body param"}), 404
