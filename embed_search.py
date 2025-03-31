@@ -346,21 +346,23 @@ def handle_webhook_post():
                 print("Audio response content:", audio_response)
                 print("type:", type(audio_response))
 
-                #     if audio_response != None:
-                #         with open(f"{audio_id}.ogg", "wb") as audio_file:
-                #             for chunk in audio_response.iter_content(chunk_size=1024):
-                #                 audio_file.write(chunk)
-                #         print(f"Audio file {audio_id}.ogg downloaded successfully.")
-                #         with open(f"{audio_id}.ogg", "rb") as f:
-                #             header = f.read(4)
-                #             print("File header:", header)
-                #         if os.path.getsize(f"{audio_id}.ogg") == 0:
-                #             print("Downloaded file is empty. Check the source.")
-                #             return jsonify({"error": "Downloaded file is empty"}), 400
-                #     else:
-                #         print(f"Failed to download audio file: {audio_response.text}")
-                # except Exception as e:
-                #     print(f"Failed downloading file: {e}")
+                if audio_response != None:
+                    try:
+                        with open(f"{audio_id}.ogg", "wb") as audio_file:
+                            for chunk in audio_response.iter_content(chunk_size=1024):
+                                audio_file.write(chunk)
+                    except Exception as e:
+                        print(f"Failed writing file: {e}")
+                    print(f"Audio file {audio_id}.ogg downloaded successfully.")
+                    with open(f"{audio_id}.ogg", "rb") as f:
+                        header = f.read(4)
+                        print("File header:", header)
+                    if os.path.getsize(f"{audio_id}.ogg") == 0:
+                        print("Downloaded file is empty. Check the source.")
+                        return jsonify({"error": "Downloaded file is empty"}), 400
+                else:
+                    print(f"Failed to download audio file: {audio_response.text}")
+                
                 
 
                 # transcribed = ""
