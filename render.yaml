@@ -1,0 +1,9 @@
+services:
+  - name: embed-search
+    type: web
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn embed_search:app
+    envVars:
+      - key: PORT
+        value: 8080
