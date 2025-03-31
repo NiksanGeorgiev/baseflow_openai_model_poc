@@ -3,6 +3,7 @@ import base64
 import openai
 import tiktoken
 import pandas as pd
+import json
 from scipy import spatial
 from typing import List
 from flask import Flask, request, jsonify
@@ -332,13 +333,16 @@ def handle_webhook_post():
                 media_id = audio_info.url
                 print("Media URL:", media_id)
 
-                media_url = requests.get(media_id, headers=headers).content.decode("utf-8")
-                print("Entire Decoded Content:", media_url)
-                print("Decoded Url:", media_url.url)
-                print("https://lookaside.fbsbx.com/whatsapp_business/attachments/?mid=...")
+                media_url_content = requests.get(media_id, headers=headers).content.decode("utf-8")  # Decode the byte string
+                media_url_json = json.loads(media_url_content)  # Parse the JSON
 
+                # Extract the URL
+                media_url = media_url_json.get("url")
+                print("Entire Content:", media_url_content)
+                print("Url:", media_url)
 
-                audio_response = requests.get(media_url.url, headers=headers).content.decode("utf-8")
+                audio_response = requests.get(media_url, headers=headers).content
+                print("Extracted URL:", url)
                 print("Audio response content:", audio_response)
                 print("type:", type(audio_response))
 
