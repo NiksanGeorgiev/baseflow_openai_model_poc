@@ -1,4 +1,5 @@
 import os
+import base64
 import openai
 import tiktoken
 import pandas as pd
@@ -144,6 +145,45 @@ def query_message(query: str, df: pd.DataFrame, model: str, token_budget: int) -
     return message + question
 
 
+def ask_audio(
+        audio: str,
+        model: str = GPT_MODELS[1]
+    )-> str:
+
+        # Fetch the audio file and convert it to a base64 encoded string
+
+    with open(audio, "rb") as ogg_file:
+        ogg_bytes = ogg_file.read()
+    print(ogg_bytes)
+    encoded_string = base64.b64encode(ogg_bytes).decode('utf-8')
+
+    completion = openai.chat.completions.create(
+        model="gpt-4o-audio-preview",
+        modalities=["text", "audio"],
+        audio={"voice": "alloy", "format": "wav"},
+        messages=[
+            {
+                "role": "user",
+                "content": [
+                    { 
+                        "type": "text",
+                        "text": "What is in this recording?"
+                    },
+                    {
+                        "type": "input_audio",
+                        "input_audio": {
+                            "data": encoded_string,
+                            "format": "wav"
+                        }
+                    }
+                ]
+            },
+        ]
+    )
+
+    print(completion.choices[0].message)
+
+
 def ask(
     query: str,
     df: pd.DataFrame,
@@ -224,7 +264,7 @@ def handle_webhook():
         else:
             return jsonify({"error": "Invalid token"}), 403
         
-@app.route("/webhook", methods=["POST"])
+
 @app.route("/webhook", methods=["POST"])
 def handle_webhook_post():
     body = request.get_json()
@@ -325,4 +365,5 @@ def handle_webhook_post():
         return jsonify({"error": "Invalid body param"}), 404            
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8080)
+    ask_audio('alloy.wav')
+    #app.run(host="0.0.0.0", port=8080)
