@@ -225,27 +225,31 @@ def handle_webhook():
             return jsonify({"error": "Invalid token"}), 403
         
 @app.route("/webhook", methods=["POST"])
+@app.route("/webhook", methods=["POST"])
 def handle_webhook_post():
     body = request.get_json()
 
     print("Received webhook body:")
-    print(body)
-    
-    if body.get("object"):
-            entry = body.get("entry", [])
-            if (
-                entry
-                and entry[0].get("changes")
-                and entry[0]["changes"][0].get("value", {}).get("messages")
-                and entry[0]["changes"][0]["value"]["messages"][0]
-            ):
-                phon_no_id = entry[0]["changes"][0]["value"]["metadata"]["phone_number_id"]
-                from_number = entry[0]["changes"][0]["value"]["messages"][0]["from"]
-                msg_body = entry[0]["changes"][0]["value"]["messages"][0]["text"]["body"]
+    print(repr(body))  # Use repr to see all symbols in the body
 
+    if body.get("object"):
+        entry = body.get("entry", [])
+        if (
+            entry
+            and entry[0].get("changes")
+            and entry[0]["changes"][0].get("value", {}).get("messages")
+            and entry[0]["changes"][0]["value"]["messages"][0]
+        ):
+            message = entry[0]["changes"][0]["value"]["messages"][0]
+            phon_no_id = entry[0]["changes"][0]["value"]["metadata"]["phone_number_id"]
+            from_number = message["from"]
+
+            if message["type"] == "text":
+                # Handle text messages
+                msg_body = message["text"]["body"]
                 print(f"phone number {phon_no_id}")
                 print(f"from {from_number}")
-                print(f"body param {msg_body}")
+                print(f"text message body {msg_body}")
 
                 answer = ask(
                     msg_body,
@@ -271,11 +275,54 @@ def handle_webhook_post():
                 response = requests.post(url, json=payload, headers=headers)
                 print(response.text)
 
-                return jsonify({"status": "success"}), 200
+            elif message["type"] == "audio":
+                # Handle audio messages
+                audio_id = message["audio"]["id"]
+                mime_type = message["audio"]["mime_type"]
+                sha256 = message["audio"]["sha256"]
+                print(f"phone number {phon_no_id}")
+                print(f"from {from_number}")
+                print(f"audio ID {audio_id}")
+                print(f"audio MIME type {mime_type}")
+                print(f"audio SHA256 {sha256}")
+
+                # Download the audio file
+                url = f"https://graph.facebook.com/v22.0/{audio_id}"
+                headers = {
+                    "Authorization": f"Bearer {whatsapp_access_token}",
+                }
+                audio_response = requests.get(url, headers=headers, stream=True)
+
+                if audio_response.status_code == 200:
+                    with open(f"{audio_id}.ogg", "wb") as audio_file:
+                        for chunk in audio_response.iter_content(chunk_size=1024):
+                            audio_file.write(chunk)
+                    print(f"Audio file {audio_id}.ogg downloaded successfully.")
+                else:
+                    print(f"Failed to download audio file: {audio_response.text}")
+
+                # Respond to the user
+                url = f"https://graph.facebook.com/v22.0/{phon_no_id}/messages"
+                payload = {
+                    "messaging_product": "whatsapp",
+                    "to": from_number,
+                    "text": {
+                        "body": "We received your audio message. Thank you!"
+                    },
+                }
+                headers = {
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {whatsapp_access_token}",
+                }
+
+                response = requests.post(url, json=payload, headers=headers)
+                print(response.text)
+
+            return jsonify({"status": "success"}), 200
+        else:
+            return jsonify({"error": "Invalid body param"}), 404
     else:
-        return jsonify({"error": "Invalid body param"}), 404     
-            
+        return jsonify({"error": "Invalid body param"}), 404            
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
-
