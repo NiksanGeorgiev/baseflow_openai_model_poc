@@ -228,6 +228,9 @@ def handle_webhook():
 def handle_webhook_post():
     body = request.get_json()
 
+    print("Received webhook body:")
+    print(body)
+    
     if body.get("object"):
             entry = body.get("entry", [])
             if (
