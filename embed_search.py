@@ -363,44 +363,44 @@ def handle_webhook_post():
                     print(f"Failed to download audio file: {audio_response.text}")
                       
 
-                # transcribed = ""
-                # try:
-                #     # Convert OGG to WAV
-                #     audio = AudioSegment.from_file(f"{audio_id}.ogg", format="ogg")
-                # except Exception as e:
-                #     print(f"Failed converting file: {e}")
-                #     return jsonify({"error": "Failed converting file"}), 400
-                # try:
-                #     # Convert OGG to WAV
-                #     audio.export(f"{audio_id}.wav", format="wav")
-                # except Exception as e:
-                #     print(f"Failed expporting file: {e}")
-                #     return jsonify({"error": "Failed exporting file"}), 400
+                transcribed = ""
+                try:
+                    # Convert OGG to WAV
+                    audio = AudioSegment.from_file(f"{audio_id}.ogg", format="ogg")
+                except Exception as e:
+                    print(f"Failed converting file: {e}")
+                    return jsonify({"error": "Failed converting file"}), 400
+                try:
+                    # Convert OGG to WAV
+                    audio.export(f"{audio_id}.wav", format="wav")
+                except Exception as e:
+                    print(f"Failed expporting file: {e}")
+                    return jsonify({"error": "Failed exporting file"}), 400
                 
                     
 
-                # transcribed = transcribe_audio(f"{audio_id}.wav")
+                transcribed = transcribe_audio(f"{audio_id}.wav")
                 
-                # answer = ask(
-                #     transcribed,
-                #     df,
-                #     model=GPT_MODELS[1],
-                #     token_budget=4096 - 500,
-                #     print_message=False,
-                # )
+                answer = ask(
+                    transcribed,
+                    df,
+                    model=GPT_MODELS[1],
+                    token_budget=4096 - 500,
+                    print_message=False,
+                )
 
-                # url = f"https://graph.facebook.com/v22.0/{phon_no_id}/messages"
-                # payload = {
-                #     "messaging_product": "whatsapp",
-                #     "to": from_number,
-                #     "text": {
-                #         "body": f"{answer}"
-                #     },
-                # }
-                # headers = {
-                #     "Content-Type": "application/json",
-                #     "Authorization": f"Bearer {whatsapp_access_token}",
-                # }
+                url = f"https://graph.facebook.com/v22.0/{phon_no_id}/messages"
+                payload = {
+                    "messaging_product": "whatsapp",
+                    "to": from_number,
+                    "text": {
+                        "body": f"{answer}"
+                    },
+                }
+                headers = {
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {whatsapp_access_token}",
+                }
             return jsonify({"status": "success"}), 200
         else:
             return jsonify({"error": "Invalid body param"}), 404
