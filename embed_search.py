@@ -380,7 +380,8 @@ def handle_webhook_post():
                     
 
                 transcribed = transcribe_audio(f"{audio_id}.wav")
-                
+                print(f"Transcribed text: {transcribed}")
+
                 answer = ask(
                     transcribed,
                     df,
@@ -388,6 +389,7 @@ def handle_webhook_post():
                     token_budget=4096 - 500,
                     print_message=False,
                 )
+                print(f"Answer: {answer}")
 
                 url = f"https://graph.facebook.com/v22.0/{phon_no_id}/messages"
                 payload = {
@@ -401,6 +403,11 @@ def handle_webhook_post():
                     "Content-Type": "application/json",
                     "Authorization": f"Bearer {whatsapp_access_token}",
                 }
+
+                print("Payload:", payload)
+                response = requests.post(url, json=payload, headers=headers)
+                print(response.text)
+                
             return jsonify({"status": "success"}), 200
         else:
             return jsonify({"error": "Invalid body param"}), 404
