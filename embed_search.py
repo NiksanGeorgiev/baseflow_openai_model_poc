@@ -329,9 +329,7 @@ def handle_webhook_post():
                 headers = headers
             )
 
-            return 200
-        else:
-            return jsonify({"error": "Invalid body param"}), 404
+            return jsonify({"status": "success"}), 200
     else:
         return jsonify({"error": "Invalid body param"}), 404            
 
