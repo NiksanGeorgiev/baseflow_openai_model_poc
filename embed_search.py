@@ -1,16 +1,16 @@
-import os
-import base64
-import openai
-import tiktoken
-import pandas as pd
 import json
-from scipy import spatial
+import os
 from typing import List
-from flask import Flask, request, jsonify
-from flask_cors import CORS
+
+import openai
+import pandas as pd
 import requests
 from dotenv import load_dotenv
+from flask import Flask, jsonify, request
+from flask_cors import CORS
 from pydub import AudioSegment
+from scipy import spatial
+import tiktoken
 
 # Load environment variables from .env file
 load_dotenv()
@@ -146,10 +146,11 @@ def query_message(query: str, df: pd.DataFrame, model: str, token_budget: int) -
             message += next_article
     return message + question
 
-# Works with mp3, mp4, mpeg, mpga, m4a, wav, and webm
-def transcribe_audio(
-        audio_file_path: str
-    )-> str:
+def transcribe_audio(audio_file_path: str)-> str:
+    """
+    Works with mp3, mp4, mpeg, mpga, m4a, wav, and webm formats.
+    The audio file must be less than 25 MB.
+    """ 
 
     with open(audio_file_path, "rb") as audio_file:
         transcription = openai.audio.transcriptions.create(
@@ -244,7 +245,13 @@ def handle_webhook():
 
 @app.route("/webhook", methods=["POST"])
 def handle_webhook_post():
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {whatsapp_access_token}",
+    }
     body = request.get_json()
+    print(f"Received body: {body}")
+    question = None
 
     if body.get("object"):
         entry = body.get("entry", [])
@@ -260,48 +267,19 @@ def handle_webhook_post():
 
             if message["type"] == "text":
                 # Handle text messages
-                msg_body = message["text"]["body"]
-                print(f"phone number {phon_no_id}")
-                print(f"from {from_number}")
-                print(f"text message body {msg_body}")
-
-                answer = ask(
-                    msg_body,
-                    df,
-                    model=GPT_MODELS[1],
-                    token_budget=4096 - 500,
-                    print_message=False,
-                )
-
-                url = f"https://graph.facebook.com/v22.0/{phon_no_id}/messages"
-                payload = {
-                    "messaging_product": "whatsapp",
-                    "to": from_number,
-                    "text": {
-                        "body": f"{answer}"
-                    },
-                }
-                headers={
-                    "Content-Type": "application/json",
-                    "Authorization": f"Bearer {whatsapp_access_token}",
-                }
-
-                response = requests.post(url, json=payload, headers=headers)
+                question = message["text"]["body"]
 
             elif message["type"] == "audio":
                 # Handle audio messages
                 audio_id = message["audio"]["id"]
 
                 # Download the audio file
-                url = f"https://graph.facebook.com/v22.0/{audio_id}"
-                headers={
-                    "Content-Type": "application/json",
-                    "Authorization": f"Bearer {whatsapp_access_token}",
-                }
-                audio_info = requests.get(url, headers=headers)
+                audio_info = requests.get(
+                        f"https://graph.facebook.com/v22.0/{audio_id}",
+                        headers=headers
+                    )
 
                 media_id = audio_info.url
-                print("Media URL:", media_id)
 
                 media_url_content = requests.get(media_id, headers=headers).content.decode("utf-8")
                 media_url_json = json.loads(media_url_content)
@@ -328,34 +306,30 @@ def handle_webhook_post():
                 except Exception as e:
                     return jsonify({"error": "Failed converting or exporting voice note"}), 400
                 
-                transcribed = transcribe_audio(f"{audio_id}.wav")
-                print(f"Transcribed text: {transcribed}")
+                question = transcribe_audio(f"{audio_id}.wav")
 
-                answer = ask(
-                    transcribed,
-                    df,
-                    model=GPT_MODELS[1],
-                    token_budget=4096 - 500,
-                    print_message=False,
-                )
+            print(f"Transcribed text: {question}")
+            answer = ask (
+                question,
+                df,
+                model=GPT_MODELS[1],
+                token_budget=4096 - 500,
+                print_message=False,
+            )
 
-                url = f"https://graph.facebook.com/v22.0/{phon_no_id}/messages"
-
-                requests.post(url,
-                               json=
-                               {
+            requests.post(
+                f"https://graph.facebook.com/v22.0/{phon_no_id}/messages",
+                json = {
                     "messaging_product": "whatsapp",
                     "to": from_number,
                     "text": {
                         "body": f"{answer}"
                     },
-                }, headers={
-                    "Content-Type": "application/json",
-                    "Authorization": f"Bearer {whatsapp_access_token}",
-                }
-                )
+                },
+                headers = headers
+            )
 
-            return jsonify({"status": "success"}), 200
+            return 200
         else:
             return jsonify({"error": "Invalid body param"}), 404
     else:
