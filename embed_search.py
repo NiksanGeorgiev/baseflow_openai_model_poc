@@ -281,29 +281,21 @@ def handle_webhook_post():
                         "body": f"{answer}"
                     },
                 }
-                headers = {
+                headers={
                     "Content-Type": "application/json",
                     "Authorization": f"Bearer {whatsapp_access_token}",
                 }
 
                 response = requests.post(url, json=payload, headers=headers)
-                print(response.text)
 
             elif message["type"] == "audio":
                 # Handle audio messages
                 audio_id = message["audio"]["id"]
-                mime_type = message["audio"]["mime_type"]
-                sha256 = message["audio"]["sha256"]
-                print(f"phone number {phon_no_id}")
-                print(f"from {from_number}")
-                print(f"audio ID {audio_id}")
-                print(f"audio MIME type {mime_type}")
-                print(f"audio SHA256 {sha256}")
 
                 # Download the audio file
-                
                 url = f"https://graph.facebook.com/v22.0/{audio_id}"
-                headers = {
+                headers={
+                    "Content-Type": "application/json",
                     "Authorization": f"Bearer {whatsapp_access_token}",
                 }
                 audio_info = requests.get(url, headers=headers)
@@ -311,52 +303,31 @@ def handle_webhook_post():
                 media_id = audio_info.url
                 print("Media URL:", media_id)
 
-                media_url_content = requests.get(media_id, headers=headers).content.decode("utf-8")  # Decode the byte string
-                media_url_json = json.loads(media_url_content)  # Parse the JSON
+                media_url_content = requests.get(media_id, headers=headers).content.decode("utf-8")
+                media_url_json = json.loads(media_url_content)
 
                 # Extract the URL
                 media_url = media_url_json.get("url")
-                print("Entire Content:", media_url_content)
-                print("Url:", media_url)
-
                 audio_response = requests.get(media_url, headers=headers).content
-                print("Extracted URL:", url)
-                print("Audio response content:", audio_response)
-                print("type:", type(audio_response))
 
                 if audio_response != None:
                     try:
                         with open(f"{audio_id}.ogg", "wb") as audio_file:
                             audio_file.write(audio_response)
                     except Exception as e:
-                        print(f"Failed writing file: {e}")
-                    print(f"Audio file {audio_id}.ogg downloaded successfully.")
-                    with open(f"{audio_id}.ogg", "rb") as f:
-                        header = f.read(4)
-                        print("File header:", header)
+                        return jsonify({"error": "Could not read voice note"}), 400
                     if os.path.getsize(f"{audio_id}.ogg") == 0:
-                        print("Downloaded file is empty. Check the source.")
                         return jsonify({"error": "Downloaded file is empty"}), 400
                 else:
-                    print(f"Failed to download audio file: {audio_response.text}")
-                      
+                    print(f"Failed to download voice note: {audio_response.text}")
 
-                transcribed = ""
+                # Convert OGG to WAV
                 try:
-                    # Convert OGG to WAV
                     audio = AudioSegment.from_file(f"{audio_id}.ogg", format="ogg")
-                except Exception as e:
-                    print(f"Failed converting file: {e}")
-                    return jsonify({"error": "Failed converting file"}), 400
-                try:
-                    # Convert OGG to WAV
                     audio.export(f"{audio_id}.wav", format="wav")
                 except Exception as e:
-                    print(f"Failed expporting file: {e}")
-                    return jsonify({"error": "Failed exporting file"}), 400
+                    return jsonify({"error": "Failed converting or exporting voice note"}), 400
                 
-                    
-
                 transcribed = transcribe_audio(f"{audio_id}.wav")
                 print(f"Transcribed text: {transcribed}")
 
@@ -367,24 +338,22 @@ def handle_webhook_post():
                     token_budget=4096 - 500,
                     print_message=False,
                 )
-                print(f"Answer: {answer}")
 
                 url = f"https://graph.facebook.com/v22.0/{phon_no_id}/messages"
-                payload = {
+
+                requests.post(url,
+                               json=
+                               {
                     "messaging_product": "whatsapp",
                     "to": from_number,
                     "text": {
                         "body": f"{answer}"
                     },
-                }
-                headers = {
+                }, headers={
                     "Content-Type": "application/json",
                     "Authorization": f"Bearer {whatsapp_access_token}",
                 }
-
-                print("Payload:", payload)
-                response = requests.post(url, json=payload, headers=headers)
-                print(response.text)
+                )
 
             return jsonify({"status": "success"}), 200
         else:
