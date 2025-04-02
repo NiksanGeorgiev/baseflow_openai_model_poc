@@ -146,41 +146,19 @@ def query_message(query: str, df: pd.DataFrame, model: str, token_budget: int) -
             message += next_article
     return message + question
 
-
+# Works with mp3, mp4, mpeg, mpga, m4a, wav, and webm
 def transcribe_audio(
-        audio: str,
-        model: str = GPT_MODELS[1]
+        audio_file_path: str
     )-> str:
 
-    with open(audio, "rb") as ogg_file:
-        ogg_bytes = ogg_file.read()
-    encoded_string = base64.b64encode(ogg_bytes).decode('utf-8')
+    with open(audio_file_path, "rb") as audio_file:
+        transcription = openai.audio.transcriptions.create(
+            model="gpt-4o-transcribe", 
+            file=audio_file, 
+            response_format="text"
+        )
 
-    completion = openai.chat.completions.create(
-        model="gpt-4o-audio-preview",
-        modalities=["text", "audio"],
-        audio={"voice": "alloy", "format": "wav"},
-        messages=[
-            {
-                "role": "user",
-                "content": [
-                    { 
-                        "type": "text",
-                        "text": "What is in this recording?"
-                    },
-                    {
-                        "type": "input_audio",
-                        "input_audio": {
-                            "data": encoded_string,
-                            "format": "wav"
-                        }
-                    }
-                ]
-            },
-        ]
-    )
-
-    return completion.choices[0].message.audio.transcript
+    return transcription
 
 
 def ask(
@@ -407,7 +385,7 @@ def handle_webhook_post():
                 print("Payload:", payload)
                 response = requests.post(url, json=payload, headers=headers)
                 print(response.text)
-                
+
             return jsonify({"status": "success"}), 200
         else:
             return jsonify({"error": "Invalid body param"}), 404
