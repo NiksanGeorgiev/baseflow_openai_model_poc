@@ -61,9 +61,7 @@ def handle_webhook_post():
 
     try:
         payload = WebhookPayload.model_validate(body)
-        print(f"Parsed payload: {payload}")
-    except ValidationError as e:
-        print(f"Validation error: {e.json()}")
+    except ValidationError:
         return jsonify({"error": "Invalid webhook payload"}), 400
 
     entry = payload.entry[0]
@@ -95,12 +93,11 @@ def handle_webhook_post():
         if not message.text:
             return jsonify({"error": "No text content in message"}), 400
         question = message.text.body
-        print(f"Received text message: {question}")
     elif message.type == "audio":
         # 'handle_audio_message' now expects a WebhookMessage instance.
         question = handle_audio_message(message, headers)
-        print(f"Transcribed text: {question}")
 
+    print(f"Received message: {question}")
     answer = ask(
         question,
         df,
