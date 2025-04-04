@@ -58,6 +58,7 @@ def handle_webhook():
 @app.route("/webhook", methods=["POST"])
 def handle_webhook_post():
     body = request.get_json()
+    print(body)
 
     try:
         payload = WebhookPayload.model_validate(body)
