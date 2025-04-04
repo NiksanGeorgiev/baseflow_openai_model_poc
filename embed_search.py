@@ -24,14 +24,11 @@ whatsapp_app_token = os.getenv("WHATSAPP_APP_TOKEN")
 # Define the models we'll use:
 GPT_MODELS = ["gpt-4o", "gpt-4o-mini"]  # Choose one for answering
 EMBEDDING_MODEL = "text-embedding-3-small"
-
-
-# --- 1. Load the Markdown File ---
+# --- 1. Load the Markdown File --- 
 def load_markdown_file(file_path: str) -> str:
     """Load the entire markdown file as a string."""
-    with open(file_path, "r", encoding="utf-8") as f:
+    with open(file_path, "r", encoding="utf-8") as f: 
         return f.read()
-
 
 # --- 2. Token Counting & Text Chunking ---
 def num_tokens(text: str, model: str = "gpt-4o-mini") -> int:
@@ -195,7 +192,7 @@ app = Flask(__name__)
 CORS(app)
 
 # 1. Load the scraped Markdown file.
-file_path = "entire_website.md"
+file_path = "asito_cao.md"
 print("Loading markdown file...")
 full_text = load_markdown_file(file_path)
 
