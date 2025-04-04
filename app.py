@@ -62,7 +62,6 @@ def handle_webhook_post():
     try:
         payload = WebhookPayload.model_validate(body)
         print(f"Parsed payload: {payload}")
-
     except ValidationError as e:
         print(f"Validation error: {e.json()}")
         return jsonify({"error": "Invalid webhook payload"}), 400
@@ -70,6 +69,14 @@ def handle_webhook_post():
     entry = payload.entry[0]
     change = entry.changes[0]
     value = change.value
+
+    if value.statuses:
+        return jsonify({}), 204
+
+    if not value.messages or len(value.messages) == 0:
+        return jsonify({"error": "No messages found in payload"}), 400
+
+    # Use the first message.
     message = value.messages[0]
     phone_no_id = value.metadata.phone_number_id
     from_number = message.from_
@@ -83,15 +90,15 @@ def handle_webhook_post():
     if message.type not in ["text", "audio"]:
         return jsonify({"error": "Unsupported message type"}), 400
 
-    if value.statuses:
-        return jsonify({}), 204
-
     question = ""
     if message.type == "text":
-        question: str = message.text.body
+        if not message.text:
+            return jsonify({"error": "No text content in message"}), 400
+        question = message.text.body
         print(f"Received text message: {question}")
     elif message.type == "audio":
-        question: str = handle_audio_message(message, headers)
+        # 'handle_audio_message' now expects a WebhookMessage instance.
+        question = handle_audio_message(message, headers)
         print(f"Transcribed text: {question}")
 
     answer = ask(
@@ -101,7 +108,7 @@ def handle_webhook_post():
         print_message=False,
     )
 
-    test = requests.post(
+    response = requests.post(
         f"https://graph.facebook.com/v22.0/{phone_no_id}/messages",
         json={
             "messaging_product": "whatsapp",
@@ -112,7 +119,7 @@ def handle_webhook_post():
         headers=headers,
     )
 
-    return test.json()
+    return jsonify(response.json())
 
 
 def handle_audio_message(message: WebhookMessage, headers: dict) -> str:
