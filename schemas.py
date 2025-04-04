@@ -27,11 +27,37 @@ class WebhookMessage(BaseModel):
     audio: Optional[WebhookAudio] = None
 
 
+# New models for statuses
+class WebhookConversationOrigin(BaseModel):
+    type: str
+
+
+class WebhookConversation(BaseModel):
+    id: str
+    origin: WebhookConversationOrigin
+
+
+class WebhookPricing(BaseModel):
+    billable: bool
+    pricing_model: str
+    category: str
+
+
+class WebhookStatus(BaseModel):
+    id: str
+    status: str
+    timestamp: str
+    recipient_id: str
+    conversation: WebhookConversation
+    pricing: WebhookPricing
+
+
 class WebhookValue(BaseModel):
     messaging_product: str
     metadata: WebhookMetadata
-    contacts: List[dict]
-    messages: List[WebhookMessage]
+    contacts: Optional[List[dict]] = None
+    messages: Optional[List[WebhookMessage]] = None
+    statuses: Optional[List[WebhookStatus]] = None
 
 
 class WebhookChange(BaseModel):
