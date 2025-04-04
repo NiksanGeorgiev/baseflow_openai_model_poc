@@ -48,8 +48,8 @@ class WebhookStatus(BaseModel):
     status: str
     timestamp: str
     recipient_id: str
-    conversation: Optional[WebhookConversation]
-    pricing: Optional[WebhookPricing]
+    conversation: Optional[WebhookConversation] = None
+    pricing: Optional[WebhookPricing] = None
 
 
 class WebhookValue(BaseModel):
