@@ -83,6 +83,9 @@ def handle_webhook_post():
     if message.type not in ["text", "audio"]:
         return jsonify({"error": "Unsupported message type"}), 400
 
+    if value.statuses:
+        return jsonify({}), 204
+
     question = ""
     if message.type == "text":
         question: str = message.text.body
