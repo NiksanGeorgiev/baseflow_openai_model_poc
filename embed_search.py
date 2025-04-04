@@ -261,6 +261,7 @@ def handle_webhook_post():
             message = entry[0]["changes"][0]["value"]["messages"][0]
             phon_no_id = entry[0]["changes"][0]["value"]["metadata"]["phone_number_id"]
             from_number = message["from"]
+            message_id = message["id"]
 
             if message["type"] == "text":
                 # Handle text messages
@@ -319,6 +320,9 @@ def handle_webhook_post():
                 json = {
                     "messaging_product": "whatsapp",
                     "to": from_number,
+                     "context": {
+                        "message_id": message_id
+                    },
                     "text": {
                         "body": f"{answer}"
                     },
@@ -328,7 +332,7 @@ def handle_webhook_post():
 
             return jsonify({"status": "success"}), 200
         else:
-            return 204
+            return "", 204
     else:
         return jsonify({"error": "Invalid body param"}), 404            
 
