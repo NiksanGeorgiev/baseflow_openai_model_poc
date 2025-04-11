@@ -113,6 +113,19 @@ def handle_webhook_post():
         },
         headers=headers,
     )
+    
+    response = requests.post(
+        f"https://graph.facebook.com/v22.0/{phone_no_id}/messages",
+        json={
+            "messaging_product": "whatsapp",
+            "status": "read",
+            "message_id": "<WHATSAPP_MESSAGE_ID>",
+            "typing_indicator": {
+                "type": "text"
+            }
+        },
+                headers=headers,
+    )
 
     answer = ask(
         question,
