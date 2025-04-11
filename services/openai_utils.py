@@ -174,5 +174,7 @@ def create_whatsapp_interactive_message(text, from_number):
             }
         }
     }
+    print(message_body)
+    print(rows)
 
     return message
