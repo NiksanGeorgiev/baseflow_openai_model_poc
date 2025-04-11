@@ -167,6 +167,7 @@ def create_whatsapp_interactive_message(text, from_number):
             "action": {
                 "sections": [
                     {
+                        "title": "Choose from the following options",
                         "rows": rows
                     }
                 ],
