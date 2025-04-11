@@ -99,20 +99,6 @@ def handle_webhook_post():
         question = handle_audio_message(message, headers)
 
     print(f"Received message: {question}")
-    response = requests.post(
-        f"https://graph.facebook.com/v22.0/{phone_no_id}/messages",
-        json={
-            "messaging_product": "whatsapp",
-            "recipient_type": "individual",
-            "type": "reaction",
-            "to": from_number,
-            "reaction": {
-                "message_id": message_id,
-                "emoji": "👍",
-                }
-        },
-        headers=headers,
-    )
     
     response = requests.post(
         f"https://graph.facebook.com/v22.0/{phone_no_id}/messages",
