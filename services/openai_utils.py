@@ -64,9 +64,10 @@ def query_message(query: str, df: pd.DataFrame, model: str, token_budget: int) -
     and finally appends the question.
     """
     retrieved_texts, _ = strings_ranked_by_relatedness(query, df, top_n=100)
+    print(retrieved_texts)
     introduction = (
         "Use the below articles to answer the subsequent question. "
-        "If the answer cannot be found in the articles, try to formulate an question that you can answer with the articles and that is related to the original question of the user. If this is not possible and there isn't anything related just say 'I could not find an answer.'"
+        "If the answer cannot be found in the articles, try to formulate an question that you can answer with the articles and that is related to the original question of the user. If this is not possible and there isn't anything related just say 'Unfortunately, I don’t know the answer to that. Please check with your supervisor or HR.'"
     )
     question = f"\n\nQuestion: {query}"
     message = introduction
