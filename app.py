@@ -120,7 +120,7 @@ def handle_webhook_post():
         print_message=False,
     )
 
-    if str(answer).find('Unfortunately, I don’t know the answer to that. Please check with your supervisor or HR.\n') != -1:
+    if str(answer).find('Unfortunately, I don’t know the answer to that. Please check with your supervisor or HR. ') != -1:
         response = requests.post(
             f"https://graph.facebook.com/v22.0/{phone_no_id}/messages",
             json={
