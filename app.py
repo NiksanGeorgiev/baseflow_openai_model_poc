@@ -120,16 +120,47 @@ def handle_webhook_post():
         print_message=False,
     )
 
-    response = requests.post(
-        f"https://graph.facebook.com/v22.0/{phone_no_id}/messages",
-        json={
-            "messaging_product": "whatsapp",
-            "to": from_number,
-            "context": {"message_id": message_id},
-            "text": {"body": f"{answer}"},
-        },
-        headers=headers,
-    )
+    if str(answer).find('Unfortunately, I don’t know the answer to that. Please check with your supervisor or HR.\n') != -1:
+        response = requests.post(
+            f"https://graph.facebook.com/v22.0/{phone_no_id}/messages",
+            json={
+                "messaging_product": "whatsapp",
+                "recipient_type": "individual",
+                "to": from_number,
+                "type": "interactive",
+                "interactive": {
+                    "type": "button",
+                    "body": {
+                        "text": answer
+                    },
+                    "action": {
+                        "buttons": [
+                            {
+                                "type": "reply",
+                                "reply": {
+                                    "id": "reply_button",
+                                    "title": "Yes"
+                                }
+                            }
+                        ]
+                    }
+                }
+            },
+            headers=headers,
+
+        )
+
+    else: 
+        response = requests.post(
+            f"https://graph.facebook.com/v22.0/{phone_no_id}/messages",
+            json={
+                "messaging_product": "whatsapp",
+                "to": from_number,
+                "context": {"message_id": message_id},
+                "text": {"body": f"{answer}"},
+            },
+            headers=headers,
+        )
 
     return jsonify(response.json())
 
