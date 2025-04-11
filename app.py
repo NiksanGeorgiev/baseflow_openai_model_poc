@@ -108,7 +108,7 @@ def handle_webhook_post():
             "to": from_number,
             "reaction": {
                 "message_id": message_id,
-                "emoji": "\uD83D\uDE00",
+                "emoji": "👍",
                 }
         },
         headers=headers,
