@@ -16,7 +16,7 @@ from config import (
 )
 from services.file_utils import load_markdown_file
 from services.text_processing import split_text_into_chunks
-from services.openai_utils import get_embeddings_for_chunks, ask, transcribe_audio
+from services.openai_utils import create_whatsapp_interactive_message, get_embeddings_for_chunks, ask, transcribe_audio
 
 # Set the OpenAI API key
 openai.api_key = OPENAI_API_KEY
@@ -123,29 +123,7 @@ def handle_webhook_post():
     if str(answer).find('Unfortunately, I don’t know the answer to that. Please check with your supervisor or HR. ') != -1:
         response = requests.post(
             f"https://graph.facebook.com/v22.0/{phone_no_id}/messages",
-            json={
-                "messaging_product": "whatsapp",
-                "recipient_type": "individual",
-                "to": from_number,
-                "type": "interactive",
-                "interactive": {
-                    "type": "button",
-                    "body": {
-                        "text": answer
-                    },
-                    "action": {
-                        "buttons": [
-                            {
-                                "type": "reply",
-                                "reply": {
-                                    "id": "reply_button",
-                                    "title": "Yes"
-                                }
-                            }
-                        ]
-                    }
-                }
-            },
+            json=create_whatsapp_interactive_message(answer, from_number),
             headers=headers,
 
         )

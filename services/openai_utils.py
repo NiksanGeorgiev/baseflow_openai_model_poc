@@ -120,3 +120,59 @@ def transcribe_audio(audio_file_path: str, model: str = TRANSCRIBE_MODEL) -> str
         )
 
     return transcription
+
+def create_whatsapp_interactive_message(text, from_number):
+    """
+    Constructs a WhatsApp interactive list message from a given text input.
+
+    The input text should include a body message followed by a list of options,
+    where each option starts with "- ".
+
+    Returns:
+        dict: A dictionary representing the WhatsApp interactive message payload.
+    """
+    # Split the input text into body and options
+    lines = text.strip().splitlines()
+    body_lines = []
+    options = []
+
+    in_options = False
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith("- "):
+            in_options = True
+            options.append(stripped[2:].strip())  # Remove the "- " prefix
+        elif not in_options:
+            body_lines.append(stripped)
+
+    message_body = " ".join(body_lines)
+
+    # Build rows from options
+    rows = [
+        {"id": str(i), "title": option}
+        for i, option in enumerate(options)
+    ]
+
+    # Construct the final message
+    message = {
+        "messaging_product": "whatsapp",
+        "recipient_type": "individual",
+        "to": from_number,
+        "type": "interactive",
+        "interactive": {
+            "type": "list",
+            "body": {
+                "text": message_body
+            },
+            "action": {
+                "sections": [
+                    {
+                        "rows": rows
+                    }
+                ],
+                "button": "Choose option"
+            }
+        }
+    }
+
+    return message
