@@ -119,12 +119,12 @@ def handle_webhook_post():
         json={
             "messaging_product": "whatsapp",
             "status": "read",
-            "message_id": "<WHATSAPP_MESSAGE_ID>",
+            "message_id": message_id,
             "typing_indicator": {
                 "type": "text"
             }
         },
-                headers=headers,
+        headers=headers,
     )
 
     answer = ask(
