@@ -98,7 +98,10 @@ def handle_webhook_post():
         # 'handle_audio_message' expects a WebhookMessage instance.
         question = handle_audio_message(message, headers)
     elif message.type == "interactive":
-        question = message.interactive.list_reply.description
+        try:
+            question = message.interactive.list_reply.description
+        except Exception as e:
+            print(e)
 
     print(f"Received message: {question}")
     # Mark message as read
