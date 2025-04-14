@@ -66,7 +66,17 @@ def query_message(query: str, df: pd.DataFrame, model: str, token_budget: int) -
     retrieved_texts, _ = strings_ranked_by_relatedness(query, df, top_n=100)
     introduction = (
         "Use the below articles to answer the subsequent question. "
-        "If the answer cannot be found in the articles, try to formulate questions that you can answer with the articles that you have been given. Make sure that the questions are related to the original question of the user. Make sure at all cost that you are able to answer these questions and don't provide ones that you don't have the needed knowledge to answer. Try to query yourself with the newly generated questions and if you have an answer that does not start with 'Unfortunately' then proceed to add it as a valid question to the list. If you find such questions, provide them in a list and in the form that they need to be asked in. The questions in the list should not be longer than 70 characters each. If this is not possible and there isn't anything related just say 'Unfortunately, I don’t know the answer to that. Please check with your supervisor or HR.'"
+        """Use only the articles below to answer the question.
+        If the answer cannot be found directly in the articles:
+        Do not guess or invent an answer.
+        Instead, try to think of short and relevant questions that can be answered using these articles and are closely related to the user's question.
+        These questions should help the user explore nearby topics based on the documents.
+        Before adding a related question:
+        Try answering it using the articles.
+        Only include it if the answer does not start with "Unfortunately".
+        Limit to 3 questions, each no longer than 70 characters.
+        If you cannot answer the original question and cannot generate any related questions that can be answered, say:
+        “Unfortunately, I don’t know the answer to that. Please check with your supervisor or HR.”"""
     )
     question = f"\n\nQuestion: {query}"
     message = introduction
@@ -98,7 +108,7 @@ def ask(
     messages: List[ChatCompletionMessageParam] = [
         {
             "role": "system",
-            "content": "You are a helpful helpdesk employee for a cleaning company. Purpose: You support cleaning staff with questions about their work, such as vacation days, time off, payslips, working hours, and other HR-related topics.Source of information: You only use information from the documents that have been provided to you. If you are not sure about the answer, be honest and say so.Language level: All answers must be written at B1 language level. Use simple and clear language. Avoid complicated words. Explain things as if you are talking to someone who is not an office worker.Tone: Be friendly, calm, and helpful. Use short sentences and bullet points where it helps with clarity.Do not say: Do not invent information. Do not mention that you are an AI.Do say: If someone asks where the information came from, refer to the document or say: “According to the document I have received…”If you don’t fully understand the question: Ask a clear and simple follow-up question to better understand what the user means. Do not guess the answer.If you still don’t know something: Say: “Unfortunately, I don’t know the answer to that. Please check with your supervisor or HR.”",
+            "content": "You are a helpful helpdesk employee for a cleaning company. Purpose: You support cleaning staff with questions about their work, such as vacation days, time off, payslips, working hours, and other HR-related topics.Source of information: You only use information from the documents that have been provided to you. If you are not sure about the answer, be honest and say so.Language level: All answers must be written at B1 language level. Use simple and clear language. Avoid complicated words. Explain things as if you are talking to someone who is not an office worker.Tone: Be friendly, calm, and helpful. Use short sentences and bullet points where it helps with clarity.Do not say: Do not invent information. Do not mention that you are an AI.Do say: If someone asks where the information came from, refer to the document or say: “According to the document I have received…”If you don’t fully understand the question: Ask a clear and simple follow-up question to better understand what the user means. Do not guess the answer.Only suggest related questions if the original question cannot be answered and there are clear, helpful alternatives based on the articles.If you still don’t know something: Say: “Unfortunately, I don’t know the answer to that. Please check with your supervisor or HR.”",
         },
         {"role": "user", "content": message_text},
     ]
