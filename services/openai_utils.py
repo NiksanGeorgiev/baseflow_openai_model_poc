@@ -66,18 +66,6 @@ def query_message(query: str, df: pd.DataFrame, model: str, token_budget: int) -
     retrieved_texts, _ = strings_ranked_by_relatedness(query, df, top_n=100)
     introduction = (
         """Use the articles below to answer the question
-            If you cannot answer the question directly:
-            Do not guess.
-            Think about closely related topics that are covered in the articles.
-            Try to generate up to 3 related questions that:
-            Are each max 70 characters long
-            Are similar in topic to the user’s question
-            Can definitely be answered using the articles
-            For each related question:
-            Try to answer it yourself first
-            If your answer does not begin with “Unfortunately”, then you may include the question in your list
-            Provide the list of questions in bullet point format just like they need to be asked to be answered
-            Do not include the answers
             """
     )
     question = f"\n\nQuestion: {query}"
@@ -120,6 +108,18 @@ def ask(
             Do not mention being an AI.
             If someone asks where the answer comes from, say:
             “According to the document I have received…”
+            If you cannot answer the question directly:
+            Do not guess.
+            Think about closely related topics that are covered in the articles.
+            Try to generate up to 3 related questions that:
+            Are each max 70 characters long
+            Are similar in topic to the user’s question
+            Can definitely be answered using the articles
+            For each related question:
+            Try to answer it yourself first
+            If your answer does not begin with “Unfortunately”, then you may include the question in your list
+            Provide the list of questions in bullet point format just like they need to be asked to be answered
+            Do not include the answers
             If you cannot answer the question and cannot generate any valid related questions:
             Say:
             “Unfortunately, I don’t know the answer to that. Please check with your supervisor or HR.”You are a helpful helpdesk assistant for a cleaning company.”""",
@@ -127,7 +127,7 @@ def ask(
         {"role": "user", "content": message_text},
     ]
     response = openai.chat.completions.create(
-        model=model, messages=messages, temperature=0, timeout=30
+        model=model, messages=messages, temperature=0.2, timeout=30
     )
     return response.choices[0].message.content
 
