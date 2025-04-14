@@ -68,13 +68,6 @@ def query_message(query: str, df: pd.DataFrame, model: str, token_budget: int) -
         """Use only the articles below to answer the question.
               If the answer cannot be found directly in the articles:
               Do not guess or invent an answer.
-              Instead, try to think of short and relevant questions that can be answered using these articles and are closely related to the user's question.
-              These questions should help the user explore nearby topics based on the documents.
-              Before adding a related question:
-              Try answering it using the articles.
-              Only include it if the answer does not start with "Unfortunately".
-              Limit to 3 questions, each no longer than 70 characters.
-              If you cannot answer the original question and cannot generate any related questions that can be answered, say:
               “Unfortunately, I don’t know the answer to that. Please check with your supervisor or HR.”"""
     )
     question = f"\n\nQuestion: {query}"
@@ -115,15 +108,14 @@ def ask(
             Tone: Be friendly, calm, and helpful. Use short sentences and bullet points where it helps with clarity.
             Do not say: Do not invent information. Do not mention that you are an AI.
             Do say: If someone asks where the information came from, refer to the document or say: “According to the document I have received…”
-            If you don’t fully understand the question: Ask a clear and simple follow-up question to better understand what the user means. Do not guess the answer.
-            Only suggest related questions if the original question cannot be answered and there are clear, helpful alternatives based on the articles.
+            If you don’t fully understand the question:Only suggest related questions if the original question cannot be answered and there are clear, helpful alternatives based on the articles.
             If you still don’t know something: Say:“Unfortunately, I don’t know the answer to that. Please check with your supervisor or HR.”
             Only suggest related questions if the original question cannot be answered and the articles contain helpful alternatives.""",
         },
         {"role": "user", "content": message_text},
     ]
     response = openai.chat.completions.create(
-        model=model, messages=messages, temperature=0.2, timeout=30
+        model=model, messages=messages, temperature=0.1, timeout=30
     )
     return response.choices[0].message.content
 
