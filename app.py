@@ -126,7 +126,7 @@ def handle_webhook_post():
     )
 
     # Send an interactive list as a response
-    if str(answer).find('Unfortunately, I don’t know the answer to that. Please check with your supervisor or HR. ') != -1:
+    if 'Unfortunately, I don’t know the answer to that. Please check with your supervisor or HR. ' in str(answer):
         response = requests.post(
             f"https://graph.facebook.com/v22.0/{phone_no_id}/messages",
             json=create_whatsapp_interactive_message(answer, from_number),
