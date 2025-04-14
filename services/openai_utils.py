@@ -149,7 +149,7 @@ def create_whatsapp_interactive_message(text, from_number):
 
     # Build rows from options
     rows = [
-        {"id": str(i), "title": str(i), "description": option}
+        {"id": str(i), "title": str(i + 1), "description": option}
         for i, option in enumerate(options)
     ]
 
