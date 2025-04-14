@@ -66,7 +66,7 @@ def query_message(query: str, df: pd.DataFrame, model: str, token_budget: int) -
     retrieved_texts, _ = strings_ranked_by_relatedness(query, df, top_n=100)
     introduction = (
         "Use the below articles to answer the subsequent question. "
-        "If the answer cannot be found in the articles, try to formulate an question that you can answer with the articles and that is related to the original question of the user. If you find such questions, provide them in a list and in the form that they need to be asked in. The questions in the list should not be longer than 70 characters each. If this is not possible and there isn't anything related just say 'Unfortunately, I don’t know the answer to that. Please check with your supervisor or HR.'"
+        "If the answer cannot be found in the articles, try to formulate questions that you can answer with the articles that you have been given. Make sure that the questions are related to the original question of the user. Make sure at all cost that you are able to answer these questions and don't provide ones that you don't have the needed knowledge to answer. If you find such questions, provide them in a list and in the form that they need to be asked in. The questions in the list should not be longer than 70 characters each. If this is not possible and there isn't anything related just say 'Unfortunately, I don’t know the answer to that. Please check with your supervisor or HR.'"
     )
     question = f"\n\nQuestion: {query}"
     message = introduction
