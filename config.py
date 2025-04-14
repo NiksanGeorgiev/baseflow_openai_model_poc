@@ -9,5 +9,5 @@ WHATSAPP_APP_TOKEN = os.getenv("WHATSAPP_APP_TOKEN")
 
 # Models configuration
 EMBEDDING_MODEL = "text-embedding-3-small"
-GPT_MODEL_MINI = "gpt-4o-mini"
+GPT_MODEL_MINI = "gpt-4o"
 TRANSCRIBE_MODEL = "gpt-4o-transcribe"
