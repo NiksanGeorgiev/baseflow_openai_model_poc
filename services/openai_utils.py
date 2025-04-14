@@ -127,7 +127,7 @@ def ask(
         {"role": "user", "content": message_text},
     ]
     response = openai.chat.completions.create(
-        model=model, messages=messages, temperature=0.1, timeout=30
+        model=model, messages=messages, temperature=0, timeout=30
     )
     return response.choices[0].message.content
 
