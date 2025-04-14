@@ -26,7 +26,7 @@ class WebhookListReply(BaseModel):
 
 class WebhookInteractive(BaseModel):
     list_reply: WebhookListReply
-
+    type: str
 
 class WebhookMessage(BaseModel):
     from_: str = Field(..., alias="from")
