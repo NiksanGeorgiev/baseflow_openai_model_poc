@@ -75,7 +75,9 @@ def query_message(query: str, df: pd.DataFrame, model: str, token_budget: int) -
             Can definitely be answered using the articles
             For each related question:
             Try to answer it yourself first
-            If your answer does not begin with “Unfortunately”, then you may include the question in your list"""
+            If your answer does not begin with “Unfortunately”, then you may include the question in your list
+            Provide the list of questions in bullet point format.
+            """
     )
     question = f"\n\nQuestion: {query}"
     message = introduction
@@ -117,8 +119,6 @@ def ask(
             Do not mention being an AI.
             If someone asks where the answer comes from, say:
             “According to the document I have received…”
-           
-
             If you cannot answer the question and cannot generate any valid related questions:
             Say:
             “Unfortunately, I don’t know the answer to that. Please check with your supervisor or HR.”You are a helpful helpdesk assistant for a cleaning company.”""",
