@@ -65,22 +65,17 @@ def query_message(query: str, df: pd.DataFrame, model: str, token_budget: int) -
     """
     retrieved_texts, _ = strings_ranked_by_relatedness(query, df, top_n=100)
     introduction = (
-        """
-           Use the articles below to answer the user's question.
-           Step 1 – Try to answer the question directly.
-           If the answer can be found in the articles, give a clear and simple answer.
-           Do not include any extra suggestions or questions.
-           Step 2 – If the answer cannot be found, follow these steps:
-           Do not guess or invent information.
-           Check if there are related topics in the articles that are close to the question.
-           For each related topic:
-           Formulate a short related question (max 70 characters).
-           Try answering that new question using the articles.
-           If your answer does not start with “Unfortunately”, you may include it as a suggested question.
-           Include up to 3 related questions that you can answer.
-           Step 3 – If no direct answer and no related questions can be found:
-           Respond with:
-           “Unfortunately, I don’t know the answer to that. Please check with your supervisor or HR.”"""
+        """Use only the articles below to answer the question.
+             If the answer cannot be found directly in the articles:
+             Do not guess or invent an answer.
+             Instead, try to think of short and relevant questions that can be answered using these articles and are closely related to the user's question.
+             These questions should help the user explore nearby topics based on the documents.
+             Before adding a related question:
+             Try answering it using the articles.
+             Only include it if the answer does not start with "Unfortunately".
+             Limit to 3 questions, each no longer than 70 characters.
+             If you cannot answer the original question and cannot generate any related questions that can be answered, say:
+             “Unfortunately, I don’t know the answer to that. Please check with your supervisor or HR.”"""
     )
     question = f"\n\nQuestion: {query}"
     message = introduction
