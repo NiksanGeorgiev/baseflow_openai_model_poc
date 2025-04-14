@@ -86,7 +86,7 @@ def handle_webhook_post():
         "Authorization": f"Bearer {WHATSAPP_ACCESS_TOKEN}",
     }
 
-    if message.type not in ["text", "audio"]:
+    if message.type not in ["text", "audio", "interactive"]:
         return jsonify({"error": "Unsupported message type"}), 400
 
     question = ""
