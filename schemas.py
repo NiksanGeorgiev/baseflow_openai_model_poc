@@ -28,6 +28,12 @@ class WebhookInteractive(BaseModel):
     list_reply: WebhookListReply
     type: str
 
+
+class WebhookContext(BaseModel):
+    from_: str = Field(..., alias="from")
+    id: str
+
+
 class WebhookMessage(BaseModel):
     from_: str = Field(..., alias="from")
     id: str
@@ -36,6 +42,7 @@ class WebhookMessage(BaseModel):
     text: Optional[WebhookMessageText] = None
     audio: Optional[WebhookAudio] = None
     interactive: Optional[WebhookInteractive] = None
+    context: Optional[WebhookContext] = None
 
 
 # New models for statuses
