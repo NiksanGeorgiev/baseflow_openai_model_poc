@@ -95,11 +95,13 @@ def handle_webhook_post():
             return jsonify({"error": "No text content in message"}), 400
         question = message.text.body
     elif message.type == "audio":
-        # 'handle_audio_message' now expects a WebhookMessage instance.
+        # 'handle_audio_message' expects a WebhookMessage instance.
         question = handle_audio_message(message, headers)
+    elif message.type == "interactive":
+        question = message.interactive.list_reply.description
 
     print(f"Received message: {question}")
-    
+    # Mark message as read
     response = requests.post(
         f"https://graph.facebook.com/v22.0/{phone_no_id}/messages",
         json={
@@ -120,6 +122,7 @@ def handle_webhook_post():
         print_message=False,
     )
 
+    # Send an interactive list as a response
     if str(answer).find('Unfortunately, I don’t know the answer to that. Please check with your supervisor or HR. ') != -1:
         response = requests.post(
             f"https://graph.facebook.com/v22.0/{phone_no_id}/messages",
@@ -128,6 +131,7 @@ def handle_webhook_post():
 
         )
 
+    # Send a regular message as a response
     else: 
         response = requests.post(
             f"https://graph.facebook.com/v22.0/{phone_no_id}/messages",

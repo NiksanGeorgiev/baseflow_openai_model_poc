@@ -18,6 +18,16 @@ class WebhookAudio(BaseModel):
     voice: bool
 
 
+class WebhookListReply(BaseModel):
+    id: str
+    title: str
+    description: str
+
+
+class WebhookInteractive(BaseModel):
+    list_reply: WebhookListReply
+
+
 class WebhookMessage(BaseModel):
     from_: str = Field(..., alias="from")
     id: str
@@ -25,6 +35,7 @@ class WebhookMessage(BaseModel):
     type: str
     text: Optional[WebhookMessageText] = None
     audio: Optional[WebhookAudio] = None
+    interactive: Optional[WebhookInteractive] = None
 
 
 # New models for statuses
