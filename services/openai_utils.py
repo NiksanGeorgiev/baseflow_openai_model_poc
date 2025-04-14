@@ -76,7 +76,8 @@ def query_message(query: str, df: pd.DataFrame, model: str, token_budget: int) -
             For each related question:
             Try to answer it yourself first
             If your answer does not begin with “Unfortunately”, then you may include the question in your list
-            Provide the list of questions in bullet point format.
+            Provide the list of questions in bullet point format just like they need to be asked to be answered
+            Do not include the answers
             """
     )
     question = f"\n\nQuestion: {query}"
@@ -126,7 +127,7 @@ def ask(
         {"role": "user", "content": message_text},
     ]
     response = openai.chat.completions.create(
-        model=model, messages=messages, temperature=0.2, timeout=30
+        model=model, messages=messages, temperature=0.1, timeout=30
     )
     return response.choices[0].message.content
 
