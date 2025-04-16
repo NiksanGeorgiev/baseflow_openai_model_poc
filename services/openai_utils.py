@@ -69,8 +69,7 @@ def query_message(query: str, df: pd.DataFrame, model: str, token_budget: int) -
     retrieved_texts, _ = strings_ranked_by_relatedness(query, df, top_n=100)
     introduction = """Use only the articles below to answer the question.
               If the answer cannot be found directly in the articles:
-              Do not guess or invent an answer.
-              “Unfortunately, I don’t know the answer to that. Please check with your supervisor or HR.”"""
+              Do not guess or invent an answer."""
     question = f"\n\nQuestion: {query}"
     message = introduction
     for text_section in retrieved_texts:
@@ -109,8 +108,7 @@ def ask(
             Tone: Be friendly, calm, and helpful. Use short sentences and bullet points where it helps with clarity.
             Do not say: Do not invent information. Do not mention that you are an AI.
             Do say: If someone asks where the information came from, refer to the document or say: “According to the document I have received…”
-            If you still don’t know something: Say:“😔 Unfortunately, I don’t know the answer to that. Please check with your supervisor or HR.”
-            Only suggest related questions if the original question cannot be answered and the articles contain helpful alternatives.""",
+            If you still don’t know something: Say:“😔 Unfortunately, I don’t know the answer to that. Please check with your supervisor or HR.” in the respective language""",
         },
         {"role": "user", "content": message_text},
     ]
