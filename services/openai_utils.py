@@ -158,6 +158,7 @@ def create_whatsapp_interactive_message(
     results = df_embeddings.iloc[indices[0]].to_dict(orient="records")
     questions = {result["content"] for result in results}
     print(questions)
+    print(distances)
 
     # Build rows from options
     rows = [

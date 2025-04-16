@@ -15,4 +15,4 @@ TRANSCRIBE_MODEL = "gpt-4o-transcribe"
 # Embedding and chunking parameters
 TARGET_TOKENS = 512
 
-DISTANCE_THRESHOLD = 1.0
+DISTANCE_THRESHOLD = 0.6
