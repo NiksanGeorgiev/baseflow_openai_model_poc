@@ -1,6 +1,4 @@
-from os import close
 from typing import List, Tuple
-from flask import message_flashed
 import openai
 from openai.types.chat import ChatCompletionMessageParam
 import pandas as pd
@@ -111,7 +109,7 @@ def ask(
             Tone: Be friendly, calm, and helpful. Use short sentences and bullet points where it helps with clarity.
             Do not say: Do not invent information. Do not mention that you are an AI.
             Do say: If someone asks where the information came from, refer to the document or say: “According to the document I have received…”
-            If you still don’t know something: Say:“Unfortunately, I don’t know the answer to that. Please check with your supervisor or HR.”
+            If you still don’t know something: Say:“😔 Unfortunately, I don’t know the answer to that. Please check with your supervisor or HR.”
             Only suggest related questions if the original question cannot be answered and the articles contain helpful alternatives.""",
         },
         {"role": "user", "content": message_text},
@@ -137,7 +135,7 @@ def transcribe_audio(audio_file_path: str, model: str = TRANSCRIBE_MODEL) -> str
 
 
 def create_whatsapp_interactive_message(
-    index, embedding_text, df_embeddings, from_number, message_id
+    index, embedding_text, df_embeddings, from_number, message_id, answer
 ):
     """
     Constructs a WhatsApp interactive list message from the possible related questions.
@@ -145,7 +143,7 @@ def create_whatsapp_interactive_message(
     Returns:
         dict: A dictionary representing the WhatsApp interactive message payload.
     """
-    message_body = "Unfortunately, I don’t know the answer to that. Please check with your supervisor or HR."
+    message_body = answer
     distances, indices = search_index(index, embedding_text, 3)
 
     print(distances)
