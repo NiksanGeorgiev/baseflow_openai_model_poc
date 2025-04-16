@@ -151,11 +151,15 @@ def create_whatsapp_interactive_message(
     print(distances)
     print(indices)
     relevant_questions = [
-        [v for distance, v in zip(x, y) if distance < DISTANCE_THRESHOLD]
-        for x, y in zip(distances, indices)
+        [
+            question_id
+            for distance, question_id in zip(distance_list, index_list)
+            if distance < DISTANCE_THRESHOLD
+        ]
+        for distance_list, index_list in zip(distances, indices)
     ]
     print(relevant_questions)
-    if len(relevant_questions) < 1:
+    if len(relevant_questions[0]) < 1:
         return {
             "messaging_product": "whatsapp",
             "to": from_number,
