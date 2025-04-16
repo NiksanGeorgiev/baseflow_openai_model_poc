@@ -166,7 +166,7 @@ def handle_webhook_post():
     )
 
     # Send an interactive list as a response
-    if "&^" in str(answer):
+    if "😔" in str(answer):
         question_embedding = get_embedding_for_text(question)
         response = requests.post(
             f"https://graph.facebook.com/v22.0/{phone_no_id}/messages",
