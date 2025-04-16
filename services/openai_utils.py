@@ -1,3 +1,4 @@
+from os import close
 from typing import List, Tuple
 from flask import message_flashed
 import openai
@@ -147,7 +148,14 @@ def create_whatsapp_interactive_message(
     message_body = "Unfortunately, I don’t know the answer to that. Please check with your supervisor or HR."
     distances, indices = search_index(index, embedding_text, 3)
 
-    if distances[0][0] > DISTANCE_THRESHOLD:
+    print(distances)
+    print(indices)
+    relevant_questions = [
+        [v for distance, v in zip(x, y) if distance < DISTANCE_THRESHOLD]
+        for x, y in zip(distances, indices)
+    ]
+    print(relevant_questions)
+    if len(relevant_questions) < 1:
         return {
             "messaging_product": "whatsapp",
             "to": from_number,
@@ -155,10 +163,8 @@ def create_whatsapp_interactive_message(
             "text": {"body": f"{message_body}"},
         }
 
-    results = df_embeddings.iloc[indices[0]].to_dict(orient="records")
+    results = df_embeddings.iloc[relevant_questions[0]].to_dict(orient="records")
     questions = {result["content"] for result in results}
-    print(questions)
-    print(distances)
 
     # Build rows from options
     rows = [
