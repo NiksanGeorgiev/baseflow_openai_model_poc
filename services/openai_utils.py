@@ -108,7 +108,7 @@ def ask(
             Tone: Be friendly, calm, and helpful. Use short sentences and bullet points where it helps with clarity.
             Do not say: Do not invent information. Do not mention that you are an AI.
             Do say: If someone asks where the information came from, refer to the document or say: “According to the document I have received…”
-            If you still don’t know something: Say:“Unfortunately, I don’t know the answer to that. Please check with your supervisor or HR.”""",
+            If you still don’t know something: Say:“&^ Unfortunately, I don’t know the answer to that. Please check with your supervisor or HR.”""",
         },
         {"role": "user", "content": message_text},
     ]
@@ -141,7 +141,7 @@ def create_whatsapp_interactive_message(
     Returns:
         dict: A dictionary representing the WhatsApp interactive message payload.
     """
-    message_body = answer
+    message_body = answer[2:]
     distances, indices = search_index(index, embedding_text, 3)
 
     print(distances)
