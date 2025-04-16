@@ -43,7 +43,7 @@ if os.path.exists(EMBEDDINGS_FILE):
     df_embeddings = pd.read_csv(EMBEDDINGS_FILE, sep="|", lineterminator="\n")
 
     # If the embeddings column is stored as a string, convert it back to list:
-    df_embeddings["embedding\r"] = df_embeddings["embedding\r"].apply(ast.literal_eval)
+    df_embeddings["embedding"] = df_embeddings["embedding"].apply(ast.literal_eval)
 else:
     df_embeddings = compute_embeddings(df_questions.copy())
 
@@ -52,7 +52,7 @@ else:
     print("Embeddings computed and saved to:", EMBEDDINGS_FILE)
 
 
-embeddings_list = df_embeddings["embedding\r"].tolist()
+embeddings_list = df_embeddings["embedding"].tolist()
 print("Embeddings list length:", len(embeddings_list))
 
 # build or load FAISS index from persisted file
