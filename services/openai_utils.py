@@ -70,7 +70,7 @@ def query_message(query: str, df: pd.DataFrame, model: str, token_budget: int) -
     introduction = """Use only the articles below to answer the question.
               If the answer cannot be found directly in the articles:
               Do not guess or invent an answer."""
-    question = f"\n\nQuestion: {query}"
+    question = f"\n\nQuestion: {query}. Explain very shortly."
     message = introduction
     for text_section in retrieved_texts:
         next_article = f'\n\nArticle:\n"""\n{text_section}\n"""'
@@ -113,7 +113,7 @@ def ask(
         {"role": "user", "content": message_text},
     ]
     response = openai.chat.completions.create(
-        model=model, messages=messages, temperature=0.1, timeout=30
+        model=model, messages=messages, temperature=0.17, timeout=30
     )
     return response.choices[0].message.content
 
