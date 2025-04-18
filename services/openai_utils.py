@@ -141,7 +141,7 @@ def create_whatsapp_interactive_message(
     Returns:
         dict: A dictionary representing the WhatsApp interactive message payload.
     """
-    message_body = answer
+    message_body = answer[1:]
     distances, indices = search_index(index, embedding_text, 3)
 
     print(distances)
