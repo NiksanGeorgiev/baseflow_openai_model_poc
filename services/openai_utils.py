@@ -67,8 +67,11 @@ def query_message(query: str, df: pd.DataFrame, model: str, token_budget: int) -
     and finally appends the question.
     """
     retrieved_texts, _ = strings_ranked_by_relatedness(query, df, top_n=100)
+    introduction = """Use only the articles below to answer the question.
+              If the answer cannot be found directly in the articles:
+              Do not guess or invent an answer."""
     question = f"\n\nQuestion: {query}"
-    message = ""
+    message = introduction
     for text_section in retrieved_texts:
         next_article = f'\n\nArticle:\n"""\n{text_section}\n"""'
         if num_tokens(message + next_article + question, model=model) > token_budget:
@@ -98,7 +101,14 @@ def ask(
         {
             "role": "system",
             "content": """
-""",
+            You are a helpful helpdesk assistant for a cleaning company.
+            Purpose: You support cleaning staff with questions about their work, such as vacation days, time off, payslips, working hours, and other HR-related topics.
+            Source of information: You only use information from the documents that have been provided to you. If you are not sure about the answer, be honest and say so.
+            Language level: All answers must be written at A2 language level. Use simple and clear language. Avoid complicated words. Explain things as if you are talking to someone who is not an office worker.
+            Tone: Be friendly, calm, and helpful. Use short sentences and bullet points where it helps with clarity.
+            Do not say: Do not invent information. Do not mention that you are an AI.
+            Do say: If someone asks where the information came from, refer to the document or say: “According to the document I have received…”
+            If you still don’t know something: Say:“😔 Unfortunately, I don’t know the answer to that. Please check with your supervisor or HR.”""",
         },
         {"role": "user", "content": message_text},
     ]
