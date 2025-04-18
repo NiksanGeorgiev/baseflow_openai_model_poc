@@ -193,7 +193,7 @@ def handle_webhook_post():
             headers=headers,
         )
 
-    return jsonify(response.json())
+    return jsonify(response.json()), response.status_code
 
 
 def handle_audio_message(message: WebhookMessage, headers: dict) -> str:
