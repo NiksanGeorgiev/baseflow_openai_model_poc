@@ -1,0 +1,11 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/app/data
+    environment:
+      EMBEDDINGS_FILE: /app/data/records_and_embeddings.csv
+      FAISS_INDEX_FILE: /app/data/faiss.index
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
