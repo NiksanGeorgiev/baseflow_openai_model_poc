@@ -67,11 +67,8 @@ def query_message(query: str, df: pd.DataFrame, model: str, token_budget: int) -
     and finally appends the question.
     """
     retrieved_texts, _ = strings_ranked_by_relatedness(query, df, top_n=100)
-    introduction = """Use only the articles below to answer the question.
-              If the answer cannot be found directly in the articles:
-              Do not guess or invent an answer."""
     question = f"\n\nQuestion: {query}"
-    message = introduction
+    message = ""
     for text_section in retrieved_texts:
         next_article = f'\n\nArticle:\n"""\n{text_section}\n"""'
         if num_tokens(message + next_article + question, model=model) > token_budget:
