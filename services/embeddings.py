@@ -1,22 +1,25 @@
 import openai
-from typing import List
+from config import OPENAI_API_KEY, EMBEDDING_MODEL
 
-def get_embeddings_for_chunks(
-    chunks: List[str],
-    embedding_model: str = "text-embedding-3-small",
-    batch_size: int = 50,
-) -> List:
+openai.api_key = OPENAI_API_KEY
+
+
+def get_embedding_for_text(text: str, model=EMBEDDING_MODEL):
     """
-    Compute embeddings for a list of text chunks in batches.
-    Helps avoid rate limits when calling the OpenAI API.
+    Calls the OpenAI embeddings API to get the vector representation of the text.
+    """
+    response = openai.embeddings.create(model=model, input=text.replace("\n", " "))
+    return response.data[0].embedding
+
+
+def compute_embeddings(df):
+    """
+    Computes embeddings for each row in the DataFrame.
+    Adds a new column 'embedding' to the DataFrame.
     """
     embeddings = []
-    for i in range(0, len(chunks), batch_size):
-        batch = chunks[i : i + batch_size]
-        print(f"Embedding batch {i} to {i + len(batch) - 1}...")
-        response = openai.embeddings.create(
-            input=batch, model=embedding_model, timeout=30
-        )
-        batch_embeddings = [item.embedding for item in response.data]
-        embeddings.extend(batch_embeddings)
-    return embeddings
+    for text in df["content"]:
+        emb = get_embedding_for_text(text)
+        embeddings.append(emb)
+    df["embedding"] = embeddings
+    return df

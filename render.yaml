@@ -1,9 +1,20 @@
 services:
+  - type: web
+    name: vector-db
+    runtime: docker
+    env: docker
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: EMBEDDINGS_FILE
+        value: /app/data/records_and_embeddings.csv
+      - key: FAISS_INDEX_FILE
+        value: /app/data/faiss.index
+
   - name: embed-search
     type: web
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn embed_search:app
+    startCommand: gunicorn app:app
     envVars:
       - key: PORT
         value: 8080

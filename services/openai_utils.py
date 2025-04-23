@@ -3,8 +3,9 @@ import openai
 from openai.types.chat import ChatCompletionMessageParam
 import pandas as pd
 from scipy import spatial
-from config import EMBEDDING_MODEL, GPT_MODEL_MINI, TRANSCRIBE_MODEL
+from config import EMBEDDING_MODEL, GPT_MODEL_MINI, TRANSCRIBE_MODEL, DISTANCE_THRESHOLD
 from .text_processing import num_tokens
+from faiss_index import search_index
 
 
 def get_embeddings_for_chunks(
@@ -21,7 +22,9 @@ def get_embeddings_for_chunks(
         batch = chunks[i : i + batch_size]
         print(f"Embedding batch {i} to {i + len(batch) - 1}...")
         response = openai.embeddings.create(
-            input=batch, model=embedding_model, timeout=30  # adjust as needed
+            input=batch,
+            model=embedding_model,
+            timeout=30,  # adjust as needed
         )
         # Access the embeddings via attribute access.
         batch_embeddings = [item.embedding for item in response.data]
@@ -64,13 +67,10 @@ def query_message(query: str, df: pd.DataFrame, model: str, token_budget: int) -
     and finally appends the question.
     """
     retrieved_texts, _ = strings_ranked_by_relatedness(query, df, top_n=100)
-    introduction = (
-        """Use only the articles below to answer the question.
+    introduction = """Use only the articles below to answer the question.
               If the answer cannot be found directly in the articles:
-              Do not guess or invent an answer.
-              “Unfortunately, I don’t know the answer to that. Please check with your supervisor or HR.”"""
-    )
-    question = f"\n\nQuestion: {query}"
+              Do not guess or invent an answer."""
+    question = f"\n\nQuestion: {query}. Explain very shortly."
     message = introduction
     for text_section in retrieved_texts:
         next_article = f'\n\nArticle:\n"""\n{text_section}\n"""'
@@ -104,18 +104,16 @@ def ask(
             You are a helpful helpdesk assistant for a cleaning company.
             Purpose: You support cleaning staff with questions about their work, such as vacation days, time off, payslips, working hours, and other HR-related topics.
             Source of information: You only use information from the documents that have been provided to you. If you are not sure about the answer, be honest and say so.
-            Language level: All answers must be written at B1 language level. Use simple and clear language. Avoid complicated words. Explain things as if you are talking to someone who is not an office worker.
+            Language level: All answers must be written at A2 language level. Use simple and clear language. Avoid complicated words. Explain things as if you are talking to someone who is not an office worker. Answer everything very shortly.
             Tone: Be friendly, calm, and helpful. Use short sentences and bullet points where it helps with clarity.
             Do not say: Do not invent information. Do not mention that you are an AI.
             Do say: If someone asks where the information came from, refer to the document or say: “According to the document I have received…”
-            If you don’t fully understand the question:Only suggest related questions if the original question cannot be answered and there are clear, helpful alternatives based on the articles.
-            If you still don’t know something: Say:“Unfortunately, I don’t know the answer to that. Please check with your supervisor or HR.”
-            Only suggest related questions if the original question cannot be answered and the articles contain helpful alternatives.""",
+            If you still don’t know something: Say:“😔 Unfortunately, I don’t know the answer to that. Please check with your supervisor or HR.”""",
         },
         {"role": "user", "content": message_text},
     ]
     response = openai.chat.completions.create(
-        model=model, messages=messages, temperature=0.1, timeout=30
+        model=model, messages=messages, temperature=0.17, timeout=30
     )
     return response.choices[0].message.content
 
@@ -133,38 +131,48 @@ def transcribe_audio(audio_file_path: str, model: str = TRANSCRIBE_MODEL) -> str
 
     return transcription
 
-def create_whatsapp_interactive_message(text, from_number):
-    """
-    Constructs a WhatsApp interactive list message from a given text input.
 
-    The input text should include a body message followed by a list of options,
-    where each option starts with "- ".
+def create_whatsapp_interactive_message(
+    index, embedding_text, df_embeddings, from_number, message_id, answer
+):
+    """
+    Constructs a WhatsApp interactive list message from the possible related questions.
 
     Returns:
         dict: A dictionary representing the WhatsApp interactive message payload.
     """
-    # Split the input text into body and options
-    lines = text.strip().splitlines()
-    body_lines = []
-    options = []
+    message_body = answer[1:]
+    distances, indices = search_index(index, embedding_text, 3)
 
-    in_options = False
-    for line in lines:
-        stripped = line.strip()
-        if stripped.startswith("- "):
-            in_options = True
-            options.append(stripped[2:].strip())  # Remove the "- " prefix
-        elif not in_options:
-            body_lines.append(stripped)
+    print(distances)
+    print(indices)
+    relevant_questions = [
+        [
+            question_id
+            for distance, question_id in zip(distance_list, index_list)
+            if distance < DISTANCE_THRESHOLD
+        ]
+        for distance_list, index_list in zip(distances, indices)
+    ]
+    print(relevant_questions)
+    if len(relevant_questions[0]) < 1:
+        return {
+            "messaging_product": "whatsapp",
+            "to": from_number,
+            "context": {"message_id": message_id},
+            "text": {"body": f"{message_body}"},
+        }
 
-    message_body = " ".join(body_lines)
+    results = df_embeddings.iloc[relevant_questions[0]].to_dict(orient="records")
+    questions = {result["content"] for result in results}
 
     # Build rows from options
     rows = [
         {"id": str(i), "title": str(i + 1), "description": option}
-        for i, option in enumerate(options)
+        for i, option in enumerate(questions)
     ]
 
+    message_body += "\n\nHowever here are similar questions I can answer:"
     # Construct the final message
     message = {
         "messaging_product": "whatsapp",
@@ -173,19 +181,12 @@ def create_whatsapp_interactive_message(text, from_number):
         "type": "interactive",
         "interactive": {
             "type": "list",
-            "body": {
-                "text": message_body
-            },
+            "body": {"text": message_body},
             "action": {
-                "sections": [
-                    {
-                        "title": "Options:",
-                        "rows": rows
-                    }
-                ],
-                "button": "Choose option"
-            }
-        }
+                "sections": [{"title": "Options:", "rows": rows}],
+                "button": "Choose option",
+            },
+        },
     }
 
     return message
