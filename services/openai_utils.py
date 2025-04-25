@@ -1,3 +1,4 @@
+import time
 from typing import List, Tuple
 import openai
 from openai.types.chat import ChatCompletionMessageParam
@@ -104,7 +105,8 @@ def ask(
             You are a helpful helpdesk assistant for a cleaning company.
             Purpose: You support cleaning staff with questions about their work, such as vacation days, time off, payslips, working hours, and other HR-related topics.
             Source of information: You only use information from the documents that have been provided to you. If you are not sure about the answer, be honest and say so.
-            Language level: All answers must be written at A2 language level. Use simple and clear language. Avoid complicated words. Explain things as if you are talking to someone who is not an office worker. Answer everything very shortly.
+            Language level: All answers must be written at A2 language level. Use simple and clear language. Avoid complicated words.
+            Explain things as if you are talking to someone who is not an office worker. Answer everything very shortly.
             Tone: Be friendly, calm, and helpful. Use short sentences and bullet points where it helps with clarity.
             Do not say: Do not invent information. Do not mention that you are an AI.
             Do say: If someone asks where the information came from, refer to the document or say: “According to the document I have received…”
@@ -132,66 +134,6 @@ def transcribe_audio(audio_file_path: str, model: str = TRANSCRIBE_MODEL) -> str
     return transcription
 
 
-def create_whatsapp_interactive_message(
-    index, embedding_text, df_embeddings, from_number, message_id, answer
-):
-    """
-    Constructs a WhatsApp interactive list message from the possible related questions.
-
-    Returns:
-        dict: A dictionary representing the WhatsApp interactive message payload.
-    """
-    message_body = answer[1:]
-    distances, indices = search_index(index, embedding_text, 3)
-
-    print(distances)
-    print(indices)
-    relevant_questions = [
-        [
-            question_id
-            for distance, question_id in zip(distance_list, index_list)
-            if distance < DISTANCE_THRESHOLD
-        ]
-        for distance_list, index_list in zip(distances, indices)
-    ]
-    print(relevant_questions)
-    if len(relevant_questions[0]) < 1:
-        return {
-            "messaging_product": "whatsapp",
-            "to": from_number,
-            "context": {"message_id": message_id},
-            "text": {"body": f"{message_body}"},
-        }
-
-    results = df_embeddings.iloc[relevant_questions[0]].to_dict(orient="records")
-    questions = {result["content"] for result in results}
-
-    # Build rows from options
-    rows = [
-        {"id": str(i), "title": str(i + 1), "description": option}
-        for i, option in enumerate(questions)
-    ]
-
-    message_body += "\n\nHowever here are similar questions I can answer:"
-    # Construct the final message
-    message = {
-        "messaging_product": "whatsapp",
-        "recipient_type": "individual",
-        "to": from_number,
-        "type": "interactive",
-        "interactive": {
-            "type": "list",
-            "body": {"text": message_body},
-            "action": {
-                "sections": [{"title": "Options:", "rows": rows}],
-                "button": "Choose option",
-            },
-        },
-    }
-
-    return message
-
-
 def create_vector_store(name: str) -> str:
     vector_store = openai.vector_stores.create(name=name)
     return vector_store.id
@@ -217,3 +159,29 @@ def query_vector_store(query: str, vector_store_ids: list[str]) -> str:
         tools=[{"type": "file_search", "vector_store_ids": vector_store_ids}],
     )
     return response.output_text
+
+
+def create_thread():
+    thread = openai.beta.threads.create()
+    print("Thread created")
+    return thread.id
+
+
+def add_message_to_thread(thread_id, message):
+    message += "Answer shortly please."
+    message = openai.beta.threads.messages.create(
+        thread_id=thread_id, role="user", content=message
+    )
+    return message.id
+
+
+def query_assistant(thread_id, assistant_id):
+    run = openai.beta.threads.runs.create_and_poll(
+        assistant_id=assistant_id,
+        thread_id=thread_id,
+    )
+    while run.status != "completed":
+        time.sleep(1)
+
+    messages = openai.beta.threads.messages.list(thread_id=thread_id, order="desc")
+    return messages.data[0].content[0].text.value

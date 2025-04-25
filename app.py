@@ -1,26 +1,26 @@
 import json
 import os
 import requests
-import pandas as pd
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from pydub import AudioSegment
-import openai
 from pydantic import ValidationError
 from schemas import WebhookPayload, WebhookMessage
 from config import (
-    OPENAI_API_KEY,
     WHATSAPP_ACCESS_TOKEN,
     WHATSAPP_APP_TOKEN,
-    VECTOR_STORE_ID,
+    ASSISTANT_ID,
 )
 from services.openai_utils import (
+    create_thread,
     transcribe_audio,
     query_vector_store,
+    add_message_to_thread,
+    query_assistant,
 )
 
-# Set the OpenAI API key
-openai.api_key = OPENAI_API_KEY
+# Dictionary that stores threads per user
+threads = {}
 
 app = Flask(__name__)
 CORS(app)
@@ -30,8 +30,13 @@ CORS(app)
 def ask_endpoint():
     body = request.get_json()
     question = body["question"]
+    user = body["user"]
 
-    answer = query_vector_store(question, [VECTOR_STORE_ID])
+    if user not in threads:
+        threads[user] = create_thread()
+    thread_id = threads[user]
+    add_message_to_thread(thread_id, question)
+    answer = query_assistant(thread_id, ASSISTANT_ID)
 
     return jsonify(answer), 200
 
@@ -111,7 +116,11 @@ def handle_webhook_post():
         headers=headers,
     )
 
-    answer = query_vector_store(question, [VECTOR_STORE_ID])
+    if from_number not in threads:
+        threads[from_number] = create_thread()
+    thread_id = threads[from_number]
+    add_message_to_thread(thread_id, question)
+    answer = query_assistant(thread_id, ASSISTANT_ID)
 
     response = requests.post(
         f"https://graph.facebook.com/v22.0/{phone_no_id}/messages",
