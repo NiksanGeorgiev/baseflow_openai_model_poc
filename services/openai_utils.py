@@ -190,3 +190,30 @@ def create_whatsapp_interactive_message(
     }
 
     return message
+
+
+def create_vector_store(name: str) -> str:
+    vector_store = openai.vector_stores.create(name=name)
+    return vector_store.id
+
+
+def get_file_id(file_path: str) -> str:
+    with open(file_path, "rb") as file_content:
+        result = openai.files.create(file=file_content, purpose="assistants")
+    return result.id
+
+
+def add_file_to_vector_store(vector_store_id: str, file_id: str) -> str:
+    vector_store_file = openai.vector_stores.files.create(
+        vector_store_id=vector_store_id, file_id=file_id
+    )
+    return vector_store_file.id
+
+
+def query_vector_store(query: str, vector_store_ids: list[str]) -> str:
+    response = openai.responses.create(
+        model=GPT_MODEL_MINI,
+        input=query,
+        tools=[{"type": "file_search", "vector_store_ids": vector_store_ids}],
+    )
+    return response.output_text
