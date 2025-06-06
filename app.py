@@ -14,7 +14,6 @@ from config import (
 from services.openai_utils import (
     create_thread,
     transcribe_audio,
-    query_vector_store,
     add_message_to_thread,
     query_assistant,
 )
@@ -121,6 +120,8 @@ def handle_webhook_post():
     thread_id = threads[from_number]
     add_message_to_thread(thread_id, question)
     answer = query_assistant(thread_id, ASSISTANT_ID)
+
+    print(f"Provided answer: {answer}")
 
     response = requests.post(
         f"https://graph.facebook.com/v22.0/{phone_no_id}/messages",
