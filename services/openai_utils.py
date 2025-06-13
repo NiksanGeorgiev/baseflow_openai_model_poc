@@ -167,7 +167,7 @@ def create_thread():
 
 
 def add_message_to_thread(thread_id, message):
-    message += "Answer shortly please."
+    message += "Answer shortly please. And in the lanugage the questions was asked in. For example if it is in Dutch, asnwer in Dutch; if it is in English, answer in English; if it is in Turkish (even with lating leters), answer in Turkish"
     message += """
         You can use the following examples as a template:
         Q: What is my salary? A: I don't have access to that information but here is how you can calculate your salary: (work hours per week) x (52 weeks) x (your hourly rate) = annual salary.
