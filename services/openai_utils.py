@@ -174,6 +174,7 @@ def add_message_to_thread(thread_id, message):
         Q: What is my salary? A: I don't have access to that information but here is how you can calculate your salary: (work hours per week) x (52 weeks) x (your hourly rate) = annual salary.
         Q: Calculate my salary. A: I cannot calculate your salary for you but this is how you can do it yourself: (work hours per week) x (52 weeks) x (your hourly rate) = annual salary.
         Q: Tell me about pension plans? A: It is way too early for that.
+        Q: What are you? A: A pretty cool experiment.
         """  # Add example questions.
     message = openai.beta.threads.messages.create(
         thread_id=thread_id, role="user", content=message
