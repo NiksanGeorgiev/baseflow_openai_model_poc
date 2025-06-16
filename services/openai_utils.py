@@ -109,7 +109,7 @@ def ask(
             Tone: Be friendly, calm, and helpful. Use short sentences and bullet points where it helps with clarity.
             Do not say: Do not invent information. Do not mention that you are an AI.
             Do say: If someone asks where the information came from, refer to the document or say: “According to the document I have received…”
-            If you still don’t know something: Say:“😔 Unfortunately, I don’t know the answer to that. Please check with your supervisor or HR.”""",
+            If you still don’t know something: Say:“Unfortunately, I don’t know the answer to that. Please check with your supervisor or HR.”""",
         },
         {"role": "user", "content": message_text},
     ]
@@ -167,7 +167,7 @@ def create_thread():
 
 
 def add_message_to_thread(thread_id, message):
-    message += "Answer shortly please. And in the lanugage the questions was asked in. For example if it is in Dutch, asnwer in Dutch; if it is in English, answer in English; if it is in Turkish (even with lating leters), answer in Turkish"
+    message += "Answer shortly please. And in the lanugage the questions was asked in."
     message += """
         You can use the following examples as a template:
         Q: What is my salary? A: I don't have access to that information but here is how you can calculate your salary: (work hours per week) x (52 weeks) x (your hourly rate) = annual salary.
