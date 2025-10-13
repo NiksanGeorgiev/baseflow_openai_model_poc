@@ -174,7 +174,7 @@ def add_message_to_thread(thread_id, message):
         When Asito-specific information is available, it should be prioritized
         For topics such as requesting time off or submitting expense claims, you should refer users to AFAS Pocket.
         You can use the following examples as a template:
-        Q: When do I get paid? A: You get paid on the third working day of the month. Note: You are supposed to provide the user with the third workin day of the month.
+        Q: When do I get paid? A: You get paid on the third working day of the month. Note: you can use the paymentDates.txt file to find the payment dates for any month
         """
     message = openai.beta.threads.messages.create(
         thread_id=thread_id, role="user", content=message
