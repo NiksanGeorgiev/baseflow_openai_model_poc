@@ -172,9 +172,8 @@ def add_message_to_thread(thread_id, message):
     message += """
         When users ask questions about absence or sick leave, you should first refer to the verzuimprotocol (absence protocol) and additionally to the CAO (collective labor agreement).
         When Asito-specific information is available, it should be prioritized
+        If users ask about when they get paid tell them it is the third working day of the month, then use the paymentDates.txt file to find the payment date for that month.
         For topics such as requesting time off or submitting expense claims, you should refer users to AFAS Pocket.
-        You can use the following examples as a template:
-        Q: When do I get paid? A: You get paid on the third working day of the month. Note: you can use the paymentDates.txt file to find the payment dates for any month
         """
     message = openai.beta.threads.messages.create(
         thread_id=thread_id, role="user", content=message
