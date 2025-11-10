@@ -130,7 +130,7 @@ def transcribe_audio(audio_file_path: str, model: str = TRANSCRIBE_MODEL) -> str
             model=model, file=audio_file, response_format="text"
         )
 
-    return transcription
+    return transcription.strip("\n")
 
 
 def create_vector_store(name: str) -> str:
