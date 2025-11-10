@@ -175,6 +175,7 @@ def add_message_to_thread(thread_id, message):
         For sickness notifications during vacation, such as "May I go on vacation while I am sick?" or "Can I use my vacation days during illness?", this falls under the absenteeism protocol. The employee should then be referred to the absenteeism protocol, the case manager, and the company doctor.
         If users ask about when they get paid tell them it is the third working day of the month, then use the paymentDates.txt file to find the payment date for that month.
         For topics such as requesting time off or submitting expense claims, you should refer users to AFAS Pocket.
+        Do not answer the same questions without being asked to do so. If you have already answered a question about a topic, do not bring it up again unless the user specifically asks about it.
         """
     message = openai.beta.threads.messages.create(
         thread_id=thread_id, role="user", content=message
