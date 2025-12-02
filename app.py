@@ -1,86 +1,43 @@
 import json
-import ast
 import os
 import requests
-import pandas as pd
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from pydub import AudioSegment
-import openai
 from pydantic import ValidationError
 from schemas import WebhookPayload, WebhookMessage
 from config import (
-    OPENAI_API_KEY,
     WHATSAPP_ACCESS_TOKEN,
     WHATSAPP_APP_TOKEN,
+    ASSISTANT_ID,
 )
-from services.embeddings import compute_embeddings, get_embedding_for_text
-from services.file_utils import load_markdown_file
-from services.text_processing import split_text_into_chunks
 from services.openai_utils import (
-    create_whatsapp_interactive_message,
-    get_embeddings_for_chunks,
-    ask,
+    create_thread,
     transcribe_audio,
-)
-from faiss_index import (
-    load_faiss_index,
-    build_faiss_index,
-    save_faiss_index,
+    add_message_to_thread,
+    query_assistant,
 )
 
-# Set the OpenAI API key
-openai.api_key = OPENAI_API_KEY
-
-EMBEDDINGS_FILE = os.environ.get("EMBEDDINGS_FILE", "records_and_embeddings.csv")
-FAISS_INDEX_FILE = os.environ.get("FAISS_INDEX_FILE", "fais.index")
-
-df_questions = pd.read_csv("questions.csv", sep="|")
-
-# if you want to persist embeddings, check if they exist; else compute them.
-if os.path.exists(EMBEDDINGS_FILE):
-    print("Loading embeddings from file:", EMBEDDINGS_FILE)
-    df_embeddings = pd.read_csv(EMBEDDINGS_FILE, sep="|", lineterminator="\n")
-
-    # If the embeddings column is stored as a string, convert it back to list:
-    df_embeddings["embedding"] = df_embeddings["embedding"].apply(ast.literal_eval)
-else:
-    df_embeddings = compute_embeddings(df_questions.copy())
-
-    # for now, save to CSV
-    df_embeddings.to_csv(EMBEDDINGS_FILE, index=False, sep="|")
-    print("Embeddings computed and saved to:", EMBEDDINGS_FILE)
-
-
-embeddings_list = df_embeddings["embedding"].tolist()
-print("Embeddings list length:", len(embeddings_list))
-
-# build or load FAISS index from persisted file
-if os.path.exists(FAISS_INDEX_FILE):
-    faiss_idx = load_faiss_index(FAISS_INDEX_FILE)
-else:
-    faiss_idx = build_faiss_index(embeddings_list)
-    save_faiss_index(faiss_idx, FAISS_INDEX_FILE)
-print("FAISS index ready. Index size:", faiss_idx.ntotal)
+# Dictionary that stores threads per user
+threads = {}
 
 app = Flask(__name__)
 CORS(app)
 
-# --- Data Preparation ---
-file_path = "asito_cao.md"
-print("Loading markdown file...")
-full_text = load_markdown_file(file_path)
 
-print("Splitting text into chunks...")
-chunks = split_text_into_chunks(full_text)
-print(f"Created {len(chunks)} chunks.")
+@app.route("/ask", methods=["POST"])
+def ask_endpoint():
+    body = request.get_json()
+    question = body["question"]
+    user = body["user"]
 
-print("Computing embeddings for chunks...")
-embeddings = get_embeddings_for_chunks(chunks)
-print("Embeddings computed.")
+    if user not in threads:
+        threads[user] = create_thread()
+    thread_id = threads[user]
+    add_message_to_thread(thread_id, question)
+    answer = query_assistant(thread_id, ASSISTANT_ID)
 
-# Build a DataFrame with text chunks and their embeddings.
-df = pd.DataFrame({"text": chunks, "embedding": embeddings})
+    return jsonify(answer), 200
 
 
 @app.route("/webhook", methods=["GET"])
@@ -158,40 +115,24 @@ def handle_webhook_post():
         headers=headers,
     )
 
-    answer = ask(
-        question,
-        df,
-        token_budget=4096 - 500,
-        print_message=False,
-    )
+    if from_number not in threads:
+        threads[from_number] = create_thread()
+    thread_id = threads[from_number]
+    add_message_to_thread(thread_id, question)
+    answer = query_assistant(thread_id, ASSISTANT_ID)
 
-    # Send an interactive list as a response
-    if "😔" in str(answer):
-        question_embedding = get_embedding_for_text(question)
-        response = requests.post(
-            f"https://graph.facebook.com/v22.0/{phone_no_id}/messages",
-            json=create_whatsapp_interactive_message(
-                faiss_idx,
-                question_embedding,
-                df_embeddings,
-                from_number,
-                message_id,
-                answer,
-            ),
-            headers=headers,
-        )
-    # Send a regular message as a response
-    else:
-        response = requests.post(
-            f"https://graph.facebook.com/v22.0/{phone_no_id}/messages",
-            json={
-                "messaging_product": "whatsapp",
-                "to": from_number,
-                "context": {"message_id": message_id},
-                "text": {"body": f"{answer}"},
-            },
-            headers=headers,
-        )
+    print(f"Provided answer: {answer}")
+
+    response = requests.post(
+        f"https://graph.facebook.com/v22.0/{phone_no_id}/messages",
+        json={
+            "messaging_product": "whatsapp",
+            "to": from_number,
+            "context": {"message_id": message_id},
+            "text": {"body": f"{answer}"},
+        },
+        headers=headers,
+    )
 
     return jsonify(response.json()), response.status_code
 
